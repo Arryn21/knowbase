@@ -4,7 +4,17 @@ const POLL_MS = 5 * 60 * 1000;
 const SCROLL_PX_PER_SEC = 16;
 const HOME = { lat: 33.8584, lon: -118.2551, label: 'Carson' };
 
-const SUMMARY_PANES = new Set(['research', 'techniques', 'vulns', 'new_models', 'github_trending', 'releases', 'cyber_news', 'ai_news']);
+const SUMMARY_PANES = new Set(['research', 'techniques', 'vulns', 'new_models', 'github_trending', 'releases', 'cyber_news', 'ai_news', 'chess_news', 'chess_learn']);
+const PANE_ICONS = {
+  india: 'ph-flag', world: 'ph-globe-hemisphere-east', usa: 'ph-flag-banner',
+  ai_news: 'ph-sparkle', research: 'ph-article', techniques: 'ph-wrench', new_models: 'ph-cpu',
+  hf_trending: 'ph-trend-up', releases: 'ph-package',
+  cyber_news: 'ph-shield-warning', vulns: 'ph-bug', ransomware: 'ph-lock-key', ctf: 'ph-flag-checkered',
+  hn: 'ph-newspaper', github_trending: 'ph-github-logo', community: 'ph-chats-circle',
+  chess_news: 'ph-crown', chess_live: 'ph-broadcast', chess_learn: 'ph-graduation-cap', chess_puzzle: 'ph-puzzle-piece',
+  la_events: 'ph-map-pin', quakes: 'ph-wave-sine', launches: 'ph-rocket-launch',
+};
+const paneIcon = (id) => `<i class="ph ${PANE_ICONS[id] || 'ph-list'} pi" aria-hidden="true"></i>`;
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
 
 // ---------- small utils ----------
@@ -38,8 +48,7 @@ function ago(iso) {
   const t = Date.parse(iso);
   if (!t) return '';
   const s = (Date.now() - t) / 1000;
-  if (s < 0) return until(iso);
-  if (s < 90) return 'now';
+  if (s < 90) return 'now'; // also covers publishers whose clocks run ahead
   if (s < 3600) return `${Math.round(s / 60)}m`;
   if (s < 86400) return `${Math.round(s / 3600)}h`;
   if (s < 86400 * 30) return `${Math.round(s / 86400)}d`;
@@ -82,13 +91,37 @@ function paneShell(id, title) {
   el.id = `pane-${id}`;
   el.innerHTML = `
     <header class="pane-head">
+      ${paneIcon(id)}
       <h3>${esc(title)}</h3>
       <span class="pane-meta"></span>
       <button class="pane-btn" type="button" aria-pressed="false" title="Pause this pane"><i class="ph ph-pause"></i></button>
     </header>
-    <div class="viewport" tabindex="0"><ol class="track skeleton">${'<li class="item"><div class="bar"></div><div class="bar w2"></div></li>'.repeat(8)}</ol></div>`;
+    <div class="viewport" tabindex="0" aria-label="${esc(title)}"><ol class="track skeleton">${'<li class="item"><div class="bar"></div><div class="bar w2"></div></li>'.repeat(8)}</ol></div>
+    <span class="scroll-hint" aria-hidden="true">Click to scroll</span>`;
+  makeEngageable(el.querySelector('.viewport'));
   return el;
 }
+
+// The mouse wheel belongs to the page. A pane takes the wheel only after a click inside it
+// (or Tab focus), and releases it when the pointer leaves, on Esc, or on a tap elsewhere.
+function makeEngageable(vp) {
+  const release = () => vp.classList.remove('engaged');
+  vp.addEventListener('pointerdown', (e) => {
+    if (!e.target.closest('a, button, summary')) vp.classList.add('engaged');
+  });
+  vp.addEventListener('focus', () => vp.classList.add('engaged'));
+  vp.addEventListener('blur', release);
+  vp.addEventListener('pointerleave', (e) => e.pointerType === 'mouse' && release());
+  vp.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      release();
+      vp.blur();
+    }
+  });
+}
+document.addEventListener('pointerdown', (e) => {
+  document.querySelectorAll('.viewport.engaged').forEach((v) => !v.contains(e.target) && v.classList.remove('engaged'));
+});
 
 const scrollers = new Map();
 
@@ -159,7 +192,9 @@ class AutoScroller {
     this.viewport.scrollTop = this.pos = Math.min(keep, this.half || keep);
   }
   tick(dt, now) {
-    const active = !globalPaused && !this.paused && !this.hover && this.visible && now > this.userUntil && !reduceMotion.matches;
+    const active =
+      !globalPaused && !this.paused && !this.hover && this.visible && now > this.userUntil && !reduceMotion.matches &&
+      !this.viewport.classList.contains('engaged');
     if (!active || !this.half) {
       this.pos = this.viewport.scrollTop;
       return;
@@ -181,8 +216,10 @@ function loop(now) {
 const pauseAllBtn = document.getElementById('pauseAll');
 function syncPauseAll() {
   pauseAllBtn.setAttribute('aria-pressed', String(globalPaused));
-  pauseAllBtn.innerHTML = `<i class="ph ${globalPaused ? 'ph-play' : 'ph-pause'}"></i>`;
-  pauseAllBtn.title = globalPaused ? 'Resume auto-scroll (P)' : 'Pause auto-scroll (P)';
+  pauseAllBtn.innerHTML = globalPaused
+    ? '<i class="ph ph-play" aria-hidden="true"></i><span>Resume</span>'
+    : '<i class="ph ph-pause" aria-hidden="true"></i><span>Pause</span>';
+  pauseAllBtn.title = `${globalPaused ? 'Resume' : 'Pause'} auto-scroll in every pane (shortcut: P)`;
 }
 function togglePauseAll() {
   globalPaused = !globalPaused;
@@ -282,14 +319,16 @@ function seg(name, options) {
 function renderEventsShell() {
   const el = document.getElementById('pane-la_events');
   el.innerHTML = `
-    <header class="pane-head"><h3>Free and cheap in LA</h3><span class="pane-meta"></span></header>
+    <header class="pane-head">${paneIcon('la_events')}<h3>Free and cheap in LA</h3><span class="pane-meta"></span></header>
     <div class="ev-controls">
       ${seg('when', [['today', 'Today'], ['weekend', 'Weekend'], ['week', '7 days'], ['all', '14 days']])}
       ${seg('dist', [['10', '≤10 mi'], ['25', '≤25 mi'], ['any', 'Any']])}
       ${seg('price', [['free', 'Free'], ['all', '≤$20']])}
       <select aria-label="Category" data-k="cat"></select>
     </div>
-    <div class="viewport" tabindex="0"><div class="ev-list"><div class="empty">Loading events…</div></div></div>`;
+    <div class="viewport" tabindex="0" aria-label="LA events"><div class="ev-list"><div class="empty">Loading events…</div></div></div>
+    <span class="scroll-hint" aria-hidden="true">Click to scroll</span>`;
+  makeEngageable(el.querySelector('.viewport'));
   el.addEventListener('click', (e) => {
     const b = e.target.closest('.seg button');
     if (b) {
@@ -447,6 +486,59 @@ function renderKnowledge(data) {
   });
 }
 
+// ---------- chess puzzle ----------
+const PIECES = { k: '♚', q: '♛', r: '♜', b: '♝', n: '♞', p: '♟' };
+
+function boardHTML(fen, lastMove) {
+  const [placement, turn] = fen.split(' ');
+  const grid = placement.split('/').map((row) => row.replace(/\d/g, (d) => '.'.repeat(Number(d))).split(''));
+  const flip = turn === 'b'; // show the board from the solver's side
+  const marked = lastMove ? [lastMove.slice(0, 2), lastMove.slice(2, 4)] : [];
+  let html = '';
+  for (let ri = 0; ri < 8; ri++) {
+    for (let fi = 0; fi < 8; fi++) {
+      const r = flip ? 7 - ri : ri;
+      const f = flip ? 7 - fi : fi;
+      const sq = 'abcdefgh'[f] + (8 - r);
+      const ch = grid[r]?.[f] || '.';
+      // \uFE0E keeps the pawn glyph from rendering as an emoji.
+      const piece = ch === '.' ? '' : `<span class="pc ${ch === ch.toUpperCase() ? 'w' : 'b'}">${PIECES[ch.toLowerCase()]}\uFE0E</span>`;
+      html += `<div class="sq ${(r + f) % 2 === 0 ? 'l' : 'd'}${marked.includes(sq) ? ' hl' : ''}">${piece}</div>`;
+    }
+  }
+  return `<div class="board" role="img" aria-label="Puzzle position, ${turn === 'w' ? 'white' : 'black'} to move">${html}</div>`;
+}
+
+const uciText = (m) => `${m.slice(0, 2)}→${m.slice(2, 4)}${m[4] ? '=' + m[4].toUpperCase() : ''}`;
+
+function renderPuzzle(pane) {
+  const el = document.getElementById('pane-chess_puzzle');
+  const lp = pane.lichess;
+  const cc = pane.chesscom;
+  const toMove = lp ? (lp.fen.split(' ')[1] === 'w' ? 'White' : 'Black') : '';
+  const solution = lp
+    ? lp.solution.map((m, i) => (i % 2 === 0 ? `<b>${esc(uciText(m))}</b>` : esc(uciText(m)))).join(', ')
+    : '';
+  el.innerHTML = `
+    <header class="pane-head">${paneIcon('chess_puzzle')}<h3>Daily puzzle</h3><span class="pane-meta">${esc(ago(pane.updatedAt))}</span></header>
+    <div class="puzzle-body">
+      ${
+        lp
+          ? `${boardHTML(lp.fen, lp.lastMove)}
+        <div class="puzzle-meta"><span>${toMove} to move</span><span class="badge hot">${esc(lp.rating)}</span>${lp.themes
+              .slice(0, 4)
+              .map((t) => `<span class="badge">${esc(t.replace(/([A-Z])/g, ' $1').toLowerCase())}</span>`)
+              .join('')}</div>
+        <div class="puzzle-actions">
+          <a href="${safeUrl(lp.url)}" target="_blank" rel="noopener"><i class="ph ph-play" aria-hidden="true"></i>Solve on Lichess</a>
+          <details><summary>Show solution</summary><div class="solution">${solution}</div></details>
+        </div>`
+          : ''
+      }
+      ${cc ? `<div class="daily-other"><a href="${safeUrl(cc.url)}" target="_blank" rel="noopener">Chess.com daily: ${esc(cc.title)}</a><span>Second puzzle for today</span></div>` : ''}
+    </div>`;
+}
+
 // ---------- boot ----------
 function mountPanes(panes) {
   document.querySelectorAll('[data-panes]').forEach((grid) => {
@@ -471,6 +563,7 @@ async function load() {
     for (const pane of Object.values(data.panes)) {
       if (!pane) continue;
       if (pane.id === 'la_events') renderEvents(pane);
+      else if (pane.id === 'chess_puzzle') renderPuzzle(pane);
       else if (scrollers.has(pane.id)) renderPane(pane);
     }
     renderStrip(data);
@@ -492,17 +585,28 @@ function refreshAges() {
   renderFreshness(current);
 }
 
-document.getElementById('themeToggle').addEventListener('click', () => {
-  const dark = document.documentElement.dataset.theme
+const themeBtn = document.getElementById('themeToggle');
+const isDark = () =>
+  document.documentElement.dataset.theme
     ? document.documentElement.dataset.theme === 'dark'
     : matchMedia('(prefers-color-scheme: dark)').matches;
-  document.documentElement.dataset.theme = dark ? 'light' : 'dark';
+// The button names the theme you would switch to.
+function syncThemeBtn() {
+  themeBtn.innerHTML = isDark()
+    ? '<i class="ph ph-sun" aria-hidden="true"></i><span>Light</span>'
+    : '<i class="ph ph-moon" aria-hidden="true"></i><span>Dark</span>';
+}
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', syncThemeBtn);
+themeBtn.addEventListener('click', () => {
+  document.documentElement.dataset.theme = isDark() ? 'light' : 'dark';
+  syncThemeBtn();
   try {
     localStorage.setItem('kb.theme', document.documentElement.dataset.theme);
   } catch {}
 });
 
 syncPauseAll();
+syncThemeBtn();
 mountPanes();
 renderEventsShell();
 renderClocks();

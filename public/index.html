@@ -14,11 +14,12 @@
   <script>
     try {
       const t = localStorage.getItem('kb.theme');
-      if (t) document.documentElement.dataset.theme = t;
+      if (t === 'dark' || t === 'light') document.documentElement.dataset.theme = t;
     } catch {}
   </script>
 </head>
 <body>
+  <div class="masthead">
   <header class="topbar">
     <a class="brand" href="#top" aria-label="knowbase home">
       <span class="brand-mark">kb</span><span class="brand-name">knowbase</span>
@@ -28,17 +29,18 @@
       <a href="#ai">AI</a>
       <a href="#security">Security</a>
       <a href="#pulse">Pulse</a>
+      <a href="#chess">Chess</a>
       <a href="#local">LA</a>
       <a href="#knowledge">Knowledge</a>
     </nav>
     <div class="clocks" id="clocks" aria-label="World clocks"></div>
     <a class="weather" id="weather" href="https://open-meteo.com/" target="_blank" rel="noopener" aria-label="Weather in Carson"></a>
     <div class="controls">
-      <button class="icon-btn" id="pauseAll" type="button" aria-pressed="false" title="Pause auto-scroll (P)">
-        <i class="ph ph-pause"></i>
+      <button class="pill-btn" id="pauseAll" type="button" aria-pressed="false" title="Pause or resume auto-scroll in every pane (shortcut: P)">
+        <i class="ph ph-pause" aria-hidden="true"></i><span>Pause</span>
       </button>
-      <button class="icon-btn" id="themeToggle" type="button" title="Toggle theme">
-        <i class="ph ph-circle-half"></i>
+      <button class="pill-btn" id="themeToggle" type="button" title="Switch light or dark theme">
+        <i class="ph ph-moon" aria-hidden="true"></i><span>Dark</span>
       </button>
     </div>
   </header>
@@ -48,29 +50,38 @@
     <div class="statuses" id="statuses"></div>
     <div class="freshness" id="freshness"></div>
   </div>
+  </div>
 
   <main id="top">
-    <section class="group" id="news" aria-labelledby="h-news">
+    <section class="group" data-hue="news" id="news" aria-labelledby="h-news">
       <h2 id="h-news">News</h2>
       <div class="grid" data-cols style="--cols: 3" data-panes="india world usa"></div>
     </section>
 
-    <section class="group" id="ai" aria-labelledby="h-ai">
+    <section class="group" data-hue="ai" id="ai" aria-labelledby="h-ai">
       <h2 id="h-ai">AI</h2>
       <div class="grid" data-cols style="--cols: 3" data-panes="ai_news research techniques new_models hf_trending releases"></div>
     </section>
 
-    <section class="group" id="security" aria-labelledby="h-security">
+    <section class="group" data-hue="security" id="security" aria-labelledby="h-security">
       <h2 id="h-security">Security</h2>
       <div class="grid" data-cols style="--cols: 4" data-panes="cyber_news vulns ransomware ctf"></div>
     </section>
 
-    <section class="group" id="pulse" aria-labelledby="h-pulse">
+    <section class="group" data-hue="pulse" id="pulse" aria-labelledby="h-pulse">
       <h2 id="h-pulse">Pulse</h2>
       <div class="grid" data-cols style="--cols: 3" data-panes="hn github_trending community"></div>
     </section>
 
-    <section class="group" id="local" aria-labelledby="h-local">
+    <section class="group" data-hue="chess" id="chess" aria-labelledby="h-chess">
+      <h2 id="h-chess">Chess</h2>
+      <div class="grid" data-cols style="--cols: 4">
+        <div class="grid-contents" data-panes="chess_news chess_live chess_learn"></div>
+        <article class="pane pane-puzzle" id="pane-chess_puzzle"></article>
+      </div>
+    </section>
+
+    <section class="group" data-hue="local" id="local" aria-labelledby="h-local">
       <h2 id="h-local">Around LA</h2>
       <div class="grid grid-local">
         <article class="pane pane-events" id="pane-la_events"></article>
@@ -78,7 +89,7 @@
       </div>
     </section>
 
-    <section class="group" id="knowledge" aria-labelledby="h-knowledge">
+    <section class="group" data-hue="knowledge" id="knowledge" aria-labelledby="h-knowledge">
       <h2 id="h-knowledge">Knowledge</h2>
       <div class="knowledge" id="knowledgeGrid"></div>
     </section>

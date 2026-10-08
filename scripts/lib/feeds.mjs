@@ -33,7 +33,10 @@ export function stripHtml(html = '') {
   // Atom feeds often carry escaped markup ("&lt;p&gt;"); unescape before stripping tags.
   if (/&lt;\/?[a-z]/i.test(s)) s = decodeEntities(s);
   s = s.replace(/<(script|style)[\s\S]*?<\/\1>/gi, ' ').replace(/<[^>]+>/g, ' ');
-  return decodeEntities(s).replace(/\s+/g, ' ').replace(/ ([.,;:!?)])/g, '$1').trim();
+  s = decodeEntities(s);
+  // Some feeds double-encode ("&amp;#39;"), so decode once more when entities remain.
+  if (/&(#\d+|#x[0-9a-f]+|[a-z]+);/i.test(s)) s = decodeEntities(s);
+  return s.replace(/\s+/g, ' ').replace(/ ([.,;:!?)])/g, '$1').trim();
 }
 
 export function clip(s, n = 220) {

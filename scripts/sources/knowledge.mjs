@@ -27,15 +27,20 @@ export async function quakes() {
       mag: f.properties.mag,
     };
   };
+  // Keep it short: the 8 most recent SoCal quakes plus the 6 strongest worldwide.
   const items = [
-    ...local.features.map((f) => toItem(f, true)),
-    ...world.features.filter((f) => f.properties.mag >= 5).map((f) => toItem(f, false)),
+    ...local.features.slice(0, 8).map((f) => toItem(f, true)),
+    ...world.features
+      .filter((f) => f.properties.mag >= 5)
+      .sort((a, b) => b.properties.mag - a.properties.mag)
+      .slice(0, 6)
+      .map((f) => toItem(f, false)),
   ].sort((a, b) => Date.parse(b.time) - Date.parse(a.time));
-  return { items: items.slice(0, 50) };
+  return { items };
 }
 
 export async function launches() {
-  const j = await fetchJSON('https://ll.thespacedevs.com/2.3.0/launches/upcoming/?limit=20&mode=list');
+  const j = await fetchJSON('https://ll.thespacedevs.com/2.3.0/launches/upcoming/?limit=8&mode=list');
   const items = j.results.map((l) => ({
     title: l.name,
     url: `https://www.google.com/search?q=${encodeURIComponent(l.name + ' launch')}`,

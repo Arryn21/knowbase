@@ -8,6 +8,7 @@ import * as sec from './sources/security.mjs';
 import * as pulse from './sources/pulse.mjs';
 import * as know from './sources/knowledge.mjs';
 import { la_events } from './sources/events.mjs';
+import * as chess from './sources/chess.mjs';
 
 const OUT_DIR = new URL('../public/data/', import.meta.url);
 const SITE_URL = process.env.SITE_URL || 'https://knowbase.vishaltharu.com';
@@ -35,6 +36,11 @@ const PANES = [
   ['hn', 'pulse', 'Hacker News', 15, pulse.hn],
   ['github_trending', 'pulse', 'GitHub: new and rising', 60, pulse.github_trending],
   ['community', 'pulse', 'Lobsters and Reddit', 30, pulse.community],
+
+  ['chess_news', 'chess', 'Chess news', 30, chess.chess_news],
+  ['chess_live', 'chess', 'Live and upcoming events', 15, chess.chess_live],
+  ['chess_learn', 'chess', 'Lessons, tips and tricks', 120, chess.chess_learn],
+  ['chess_puzzle', 'chess', 'Daily puzzle', 360, chess.chess_puzzle],
 
   ['la_events', 'local', 'Free and cheap in LA', 180, la_events],
   ['quakes', 'local', 'Earthquakes', 15, know.quakes],
@@ -92,7 +98,8 @@ async function main() {
         const prevForPane = id === 'la_events' ? { articles: cache.articles } : old;
         const { errors = [], articles, ...data } = await withTimeout(build(prevForPane), 240000, id);
         if (articles) cache.articles = articles;
-        if (!data.items?.length && !data.cards && !data.technique && !data.featured && old) {
+        const hasContent = data.items?.length || Object.entries(data).some(([k, v]) => k !== 'items' && v);
+        if (!hasContent && old) {
           throw new Error(`no items (${errors.join('; ') || 'empty response'})`);
         }
         panes[id] = { id, group, title, updatedAt: new Date().toISOString(), ...data, errors };
