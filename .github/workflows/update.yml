@@ -2,7 +2,8 @@ name: Refresh and deploy
 
 on:
   schedule:
-    - cron: '*/15 * * * *'
+    # Off the top of the hour: GitHub delays or drops scheduled runs most at :00.
+    - cron: '7,22,37,52 * * * *'
   push:
     branches: [main]
   workflow_dispatch:
@@ -41,6 +42,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+          REDDIT_CLIENT_ID: ${{ secrets.REDDIT_CLIENT_ID }}
+          REDDIT_CLIENT_SECRET: ${{ secrets.REDDIT_CLIENT_SECRET }}
+          REDDIT_USERNAME: ${{ vars.REDDIT_USERNAME }}
           KB_MODEL: ${{ vars.KB_MODEL }}
         run: node scripts/build-data.mjs ${{ (github.event_name == 'push' || inputs.force) && '--force' || '' }}
 

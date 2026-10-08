@@ -1,5 +1,6 @@
 import { XMLParser } from 'fast-xml-parser';
 import { fetchText } from './http.mjs';
+import { redditConfigured, redditTop } from './reddit.mjs';
 
 const parser = new XMLParser({
   ignoreAttributes: false,
@@ -85,6 +86,8 @@ export function parseFeed(xml, source) {
 }
 
 export async function fetchFeed(url, source, opts) {
+  const sub = url.match(/reddit\.com\/r\/([^/]+)\/top\/\.rss\?t=(\w+)/);
+  if (sub && redditConfigured()) return redditTop(sub[1], sub[2], source);
   return parseFeed(await fetchText(url, opts), source);
 }
 
