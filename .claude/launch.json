@@ -1,0 +1,6 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    { "name": "knowbase", "runtimeExecutable": "node", "runtimeArgs": ["scripts/serve.mjs", "4173"], "port": 4173 }
+  ]
+}

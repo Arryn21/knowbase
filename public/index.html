@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>knowbase</title>
+  <meta name="description" content="Live news and knowledge board: India, world, USA, AI, security, research, and free things to do in LA." />
+  <meta name="color-scheme" content="dark light" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2315181b'/%3E%3Ctext x='16' y='22' font-family='monospace' font-size='17' font-weight='700' text-anchor='middle' fill='%23e0a43a'%3Ekb%3C/text%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/geist@5.3.0/index.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/geist-mono@5.3.0/index.css" />
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.2/src/regular/style.css" />
+  <link rel="stylesheet" href="styles.css" />
+  <script>
+    try {
+      const t = localStorage.getItem('kb.theme');
+      if (t) document.documentElement.dataset.theme = t;
+    } catch {}
+  </script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#top" aria-label="knowbase home">
+      <span class="brand-mark">kb</span><span class="brand-name">knowbase</span>
+    </a>
+    <nav class="jump" aria-label="Sections">
+      <a href="#news">News</a>
+      <a href="#ai">AI</a>
+      <a href="#security">Security</a>
+      <a href="#pulse">Pulse</a>
+      <a href="#local">LA</a>
+      <a href="#knowledge">Knowledge</a>
+    </nav>
+    <div class="clocks" id="clocks" aria-label="World clocks"></div>
+    <a class="weather" id="weather" href="https://open-meteo.com/" target="_blank" rel="noopener" aria-label="Weather in Carson"></a>
+    <div class="controls">
+      <button class="icon-btn" id="pauseAll" type="button" aria-pressed="false" title="Pause auto-scroll (P)">
+        <i class="ph ph-pause"></i>
+      </button>
+      <button class="icon-btn" id="themeToggle" type="button" title="Toggle theme">
+        <i class="ph ph-circle-half"></i>
+      </button>
+    </div>
+  </header>
+
+  <div class="strip" id="strip" aria-label="Markets and service status">
+    <div class="tickers" id="tickers"></div>
+    <div class="statuses" id="statuses"></div>
+    <div class="freshness" id="freshness"></div>
+  </div>
+
+  <main id="top">
+    <section class="group" id="news" aria-labelledby="h-news">
+      <h2 id="h-news">News</h2>
+      <div class="grid" data-cols style="--cols: 3" data-panes="india world usa"></div>
+    </section>
+
+    <section class="group" id="ai" aria-labelledby="h-ai">
+      <h2 id="h-ai">AI</h2>
+      <div class="grid" data-cols style="--cols: 3" data-panes="ai_news research techniques new_models hf_trending releases"></div>
+    </section>
+
+    <section class="group" id="security" aria-labelledby="h-security">
+      <h2 id="h-security">Security</h2>
+      <div class="grid" data-cols style="--cols: 4" data-panes="cyber_news vulns ransomware ctf"></div>
+    </section>
+
+    <section class="group" id="pulse" aria-labelledby="h-pulse">
+      <h2 id="h-pulse">Pulse</h2>
+      <div class="grid" data-cols style="--cols: 3" data-panes="hn github_trending community"></div>
+    </section>
+
+    <section class="group" id="local" aria-labelledby="h-local">
+      <h2 id="h-local">Around LA</h2>
+      <div class="grid grid-local">
+        <article class="pane pane-events" id="pane-la_events"></article>
+        <div class="grid-local-side" data-panes="quakes launches"></div>
+      </div>
+    </section>
+
+    <section class="group" id="knowledge" aria-labelledby="h-knowledge">
+      <h2 id="h-knowledge">Knowledge</h2>
+      <div class="knowledge" id="knowledgeGrid"></div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <p>Headlines link to their publishers. Data refreshes every 15 minutes.</p>
+  </footer>
+
+  <script src="app.js" type="module"></script>
+</body>
+</html>

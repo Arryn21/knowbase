@@ -1,0 +1,16 @@
+{
+  "name": "knowbase",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Live news and knowledge dashboard for knowbase.vishaltharu.com",
+  "scripts": {
+    "build:data": "node scripts/build-data.mjs",
+    "serve": "node scripts/serve.mjs"
+  },
+  "engines": { "node": ">=22" },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.132.1",
+    "fast-xml-parser": "^4.5.0"
+  }
+}

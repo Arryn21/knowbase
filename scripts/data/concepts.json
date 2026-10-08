@@ -1,0 +1,637 @@
+[
+ {
+  "term": "OSI model",
+  "wiki": "OSI_model",
+  "track": "Networking"
+ },
+ {
+  "term": "Cross-site scripting",
+  "wiki": "Cross-site_scripting",
+  "track": "Security"
+ },
+ {
+  "term": "Transformer",
+  "wiki": "Transformer_(deep_learning_architecture)",
+  "track": "AI / ML"
+ },
+ {
+  "term": "Virtual memory",
+  "wiki": "Virtual_memory",
+  "track": "Systems"
+ },
+ {
+  "term": "Subnetwork",
+  "wiki": "Subnetwork",
+  "track": "Networking"
+ },
+ {
+  "term": "SQL injection",
+  "wiki": "SQL_injection",
+  "track": "Security"
+ },
+ {
+  "term": "Attention",
+  "wiki": "Attention_(machine_learning)",
+  "track": "AI / ML"
+ },
+ {
+  "term": "Page table",
+  "wiki": "Page_table",
+  "track": "Systems"
+ },
+ {
+  "term": "Classless Inter-Domain Routing",
+  "wiki": "Classless_Inter-Domain_Routing",
+  "track": "Networking"
+ },
+ {
+  "term": "Server-side request forgery",
+  "wiki": "Server-side_request_forgery",
+  "track": "Security"
+ },
+ {
+  "term": "Large language model",
+  "wiki": "Large_language_model",
+  "track": "AI / ML"
+ },
+ {
+  "term": "Translation lookaside buffer",
+  "wiki": "Translation_lookaside_buffer",
+  "track": "Systems"
+ },
+ {
+  "term": "Address Resolution Protocol",
+  "wiki": "Address_Resolution_Protocol",
+  "track": "Networking"
+ },
+ {
+  "term": "Cross-site request forgery",
+  "wiki": "Cross-site_request_forgery",
+  "track": "Security"
+ },
+ {
+  "term": "Mixture of experts",
+  "wiki": "Mixture_of_experts",
+  "track": "AI / ML"
+ },
+ {
+  "term": "System call",
+  "wiki": "System_call",
+  "track": "Systems"
+ },
+ {
+  "term": "Virtual LAN",
+  "wiki": "Virtual_LAN",
+  "track": "Networking"
+ },
+ {
+  "term": "Buffer overflow",
+  "wiki": "Buffer_overflow",
+  "track": "Security"
+ },
+ {
+  "term": "Retrieval-augmented generation",
+  "wiki": "Retrieval-augmented_generation",
+  "track": "AI / ML"
+ },
+ {
+  "term": "Kernel",
+  "wiki": "Kernel_(operating_system)",
+  "track": "Systems"
+ },
+ {
+  "term": "IEEE 802.1Q",
+  "wiki": "IEEE_802.1Q",
+  "track": "Networking"
+ },
+ {
+  "term": "Return-oriented programming",
+  "wiki": "Return-oriented_programming",
+  "track": "Security"
+ },
+ {
+  "term": "Fine-tuning",
+  "wiki": "Fine-tuning_(deep_learning)",
+  "track": "AI / ML"
+ },
+ {
+  "term": "Hypervisor",
+  "wiki": "Hypervisor",
+  "track": "Systems"
+ },
+ {
+  "term": "Spanning Tree Protocol",
+  "wiki": "Spanning_Tree_Protocol",
+  "track": "Networking"
+ },
+ {
+  "term": "Address space layout randomization",
+  "wiki": "Address_space_layout_randomization",
+  "track": "Security"
+ },
+ {
+  "term": "Reinforcement learning from human feedback",
+  "wiki": "Reinforcement_learning_from_human_feedback",
+  "track": "AI / ML"
+ },
+ {
+  "term": "Containerization",
+  "wiki": "Containerization_(computing)",
+  "track": "Systems"
+ },
+ {
+  "term": "Link aggregation",
+  "wiki": "Link_aggregation",
+  "track": "Networking"
+ },
+ {
+  "term": "Use-after-free",
+  "wiki": "Use-after-free",
+  "track": "Security"
+ },
+ {
+  "term": "Knowledge distillation",
+  "wiki": "Knowledge_distillation",
+  "track": "AI / ML"
+ },
+ {
+  "term": "Copy-on-write",
+  "wiki": "Copy-on-write",
+  "track": "Systems"
+ },
+ {
+  "term": "Open Shortest Path First",
+  "wiki": "Open_Shortest_Path_First",
+  "track": "Networking"
+ },
+ {
+  "term": "Heap spraying",
+  "wiki": "Heap_spraying",
+  "track": "Security"
+ },
+ {
+  "term": "Quantization",
+  "wiki": "Quantization_(signal_processing)",
+  "track": "AI / ML"
+ },
+ {
+  "term": "Consensus",
+  "wiki": "Consensus_(computer_science)",
+  "track": "Systems"
+ },
+ {
+  "term": "Enhanced Interior Gateway Routing Protocol",
+  "wiki": "Enhanced_Interior_Gateway_Routing_Protocol",
+  "track": "Networking"
+ },
+ {
+  "term": "Pass the hash",
+  "wiki": "Pass_the_hash",
+  "track": "Security"
+ },
+ {
+  "term": "Low-rank adaptation",
+  "wiki": "Low-rank_adaptation",
+  "track": "AI / ML"
+ },
+ {
+  "term": "Raft",
+  "wiki": "Raft_(algorithm)",
+  "track": "Systems"
+ },
+ {
+  "term": "Border Gateway Protocol",
+  "wiki": "Border_Gateway_Protocol",
+  "track": "Networking"
+ },
+ {
+  "term": "Kerberoasting",
+  "wiki": "Kerberoasting",
+  "track": "Security"
+ },
+ {
+  "term": "Diffusion model",
+  "wiki": "Diffusion_model",
+  "track": "AI / ML"
+ },
+ {
+  "term": "CAP theorem",
+  "wiki": "CAP_theorem",
+  "track": "Systems"
+ },
+ {
+  "term": "Routing Information Protocol",
+  "wiki": "Routing_Information_Protocol",
+  "track": "Networking"
+ },
+ {
+  "term": "Golden ticket attack",
+  "wiki": "Golden_ticket_attack",
+  "track": "Security"
+ },
+ {
+  "term": "Embedding",
+  "wiki": "Embedding_(machine_learning)",
+  "track": "AI / ML"
+ },
+ {
+  "term": "Eventual consistency",
+  "wiki": "Eventual_consistency",
+  "track": "Systems"
+ },
+ {
+  "term": "Network address translation",
+  "wiki": "Network_address_translation",
+  "track": "Networking"
+ },
+ {
+  "term": "Lateral movement",
+  "wiki": "Lateral_movement_(cybersecurity)",
+  "track": "Security"
+ },
+ {
+  "term": "Vector database",
+  "wiki": "Vector_database",
+  "track": "AI / ML"
+ },
+ {
+  "term": "Bloom filter",
+  "wiki": "Bloom_filter",
+  "track": "Systems"
+ },
+ {
+  "term": "Dynamic Host Configuration Protocol",
+  "wiki": "Dynamic_Host_Configuration_Protocol",
+  "track": "Networking"
+ },
+ {
+  "term": "Privilege escalation",
+  "wiki": "Privilege_escalation",
+  "track": "Security"
+ },
+ {
+  "term": "Tokenization",
+  "wiki": "Tokenization_(lexical_analysis)",
+  "track": "AI / ML"
+ },
+ {
+  "term": "Merkle tree",
+  "wiki": "Merkle_tree",
+  "track": "Systems"
+ },
+ {
+  "term": "Domain Name System",
+  "wiki": "Domain_Name_System",
+  "track": "Networking"
+ },
+ {
+  "term": "Phishing",
+  "wiki": "Phishing",
+  "track": "Security"
+ },
+ {
+  "term": "Hallucination",
+  "wiki": "Hallucination_(artificial_intelligence)",
+  "track": "AI / ML"
+ },
+ {
+  "term": "Consistent hashing",
+  "wiki": "Consistent_hashing",
+  "track": "Systems"
+ },
+ {
+  "term": "IPv6 address",
+  "wiki": "IPv6_address",
+  "track": "Networking"
+ },
+ {
+  "term": "Zero-day vulnerability",
+  "wiki": "Zero-day_vulnerability",
+  "track": "Security"
+ },
+ {
+  "term": "Chain-of-thought prompting",
+  "wiki": "Chain-of-thought_prompting",
+  "track": "AI / ML"
+ },
+ {
+  "term": "Load balancing",
+  "wiki": "Load_balancing_(computing)",
+  "track": "Systems"
+ },
+ {
+  "term": "Neighbor Discovery Protocol",
+  "wiki": "Neighbor_Discovery_Protocol",
+  "track": "Networking"
+ },
+ {
+  "term": "Advanced persistent threat",
+  "wiki": "Advanced_persistent_threat",
+  "track": "Security"
+ },
+ {
+  "term": "Backpropagation",
+  "wiki": "Backpropagation",
+  "track": "AI / ML"
+ },
+ {
+  "term": "Content delivery network",
+  "wiki": "Content_delivery_network",
+  "track": "Systems"
+ },
+ {
+  "term": "Access-control list",
+  "wiki": "Access-control_list",
+  "track": "Networking"
+ },
+ {
+  "term": "Ransomware",
+  "wiki": "Ransomware",
+  "track": "Security"
+ },
+ {
+  "term": "Gradient descent",
+  "wiki": "Gradient_descent",
+  "track": "AI / ML"
+ },
+ {
+  "term": "Write-ahead logging",
+  "wiki": "Write-ahead_logging",
+  "track": "Systems"
+ },
+ {
+  "term": "First-hop redundancy protocol",
+  "wiki": "First-hop_redundancy_protocol",
+  "track": "Networking"
+ },
+ {
+  "term": "Supply chain attack",
+  "wiki": "Supply_chain_attack",
+  "track": "Security"
+ },
+ {
+  "term": "Overfitting",
+  "wiki": "Overfitting",
+  "track": "AI / ML"
+ },
+ {
+  "term": "Two-phase commit protocol",
+  "wiki": "Two-phase_commit_protocol",
+  "track": "Systems"
+ },
+ {
+  "term": "Quality of service",
+  "wiki": "Quality_of_service",
+  "track": "Networking"
+ },
+ {
+  "term": "Man-in-the-middle attack",
+  "wiki": "Man-in-the-middle_attack",
+  "track": "Security"
+ },
+ {
+  "term": "Convolutional neural network",
+  "wiki": "Convolutional_neural_network",
+  "track": "AI / ML"
+ },
+ {
+  "term": "Little's law",
+  "wiki": "Little's_law",
+  "track": "Systems"
+ },
+ {
+  "term": "Simple Network Management Protocol",
+  "wiki": "Simple_Network_Management_Protocol",
+  "track": "Networking"
+ },
+ {
+  "term": "DNS spoofing",
+  "wiki": "DNS_spoofing",
+  "track": "Security"
+ },
+ {
+  "term": "Recurrent neural network",
+  "wiki": "Recurrent_neural_network",
+  "track": "AI / ML"
+ },
+ {
+  "term": "Syslog",
+  "wiki": "Syslog",
+  "track": "Networking"
+ },
+ {
+  "term": "Side-channel attack",
+  "wiki": "Side-channel_attack",
+  "track": "Security"
+ },
+ {
+  "term": "Long short-term memory",
+  "wiki": "Long_short-term_memory",
+  "track": "AI / ML"
+ },
+ {
+  "term": "Network Time Protocol",
+  "wiki": "Network_Time_Protocol",
+  "track": "Networking"
+ },
+ {
+  "term": "Spectre",
+  "wiki": "Spectre_(security_vulnerability)",
+  "track": "Security"
+ },
+ {
+  "term": "Generative adversarial network",
+  "wiki": "Generative_adversarial_network",
+  "track": "AI / ML"
+ },
+ {
+  "term": "Software-defined networking",
+  "wiki": "Software-defined_networking",
+  "track": "Networking"
+ },
+ {
+  "term": "Rowhammer",
+  "wiki": "Rowhammer",
+  "track": "Security"
+ },
+ {
+  "term": "Variational autoencoder",
+  "wiki": "Variational_autoencoder",
+  "track": "AI / ML"
+ },
+ {
+  "term": "Wi-Fi Protected Access",
+  "wiki": "Wi-Fi_Protected_Access",
+  "track": "Networking"
+ },
+ {
+  "term": "Fuzzing",
+  "wiki": "Fuzzing",
+  "track": "Security"
+ },
+ {
+  "term": "Reinforcement learning",
+  "wiki": "Reinforcement_learning",
+  "track": "AI / ML"
+ },
+ {
+  "term": "Power over Ethernet",
+  "wiki": "Power_over_Ethernet",
+  "track": "Networking"
+ },
+ {
+  "term": "Sandbox",
+  "wiki": "Sandbox_(computer_security)",
+  "track": "Security"
+ },
+ {
+  "term": "Q-learning",
+  "wiki": "Q-learning",
+  "track": "AI / ML"
+ },
+ {
+  "term": "Transmission Control Protocol",
+  "wiki": "Transmission_Control_Protocol",
+  "track": "Networking"
+ },
+ {
+  "term": "Public key infrastructure",
+  "wiki": "Public_key_infrastructure",
+  "track": "Security"
+ },
+ {
+  "term": "Byte-pair encoding",
+  "wiki": "Byte-pair_encoding",
+  "track": "AI / ML"
+ },
+ {
+  "term": "User Datagram Protocol",
+  "wiki": "User_Datagram_Protocol",
+  "track": "Networking"
+ },
+ {
+  "term": "Transport Layer Security",
+  "wiki": "Transport_Layer_Security",
+  "track": "Security"
+ },
+ {
+  "term": "Softmax function",
+  "wiki": "Softmax_function",
+  "track": "AI / ML"
+ },
+ {
+  "term": "Multiprotocol Label Switching",
+  "wiki": "Multiprotocol_Label_Switching",
+  "track": "Networking"
+ },
+ {
+  "term": "Elliptic-curve cryptography",
+  "wiki": "Elliptic-curve_cryptography",
+  "track": "Security"
+ },
+ {
+  "term": "Perplexity",
+  "wiki": "Perplexity",
+  "track": "AI / ML"
+ },
+ {
+  "term": "Anycast",
+  "wiki": "Anycast",
+  "track": "Networking"
+ },
+ {
+  "term": "Post-quantum cryptography",
+  "wiki": "Post-quantum_cryptography",
+  "track": "Security"
+ },
+ {
+  "term": "Speculative decoding",
+  "wiki": "Speculative_decoding",
+  "track": "AI / ML"
+ },
+ {
+  "term": "Virtual Router Redundancy Protocol",
+  "wiki": "Virtual_Router_Redundancy_Protocol",
+  "track": "Networking"
+ },
+ {
+  "term": "Zero trust architecture",
+  "wiki": "Zero_trust_architecture",
+  "track": "Security"
+ },
+ {
+  "term": "Model Context Protocol",
+  "wiki": "Model_Context_Protocol",
+  "track": "AI / ML"
+ },
+ {
+  "term": "Maximum transmission unit",
+  "wiki": "Maximum_transmission_unit",
+  "track": "Networking"
+ },
+ {
+  "term": "Security information and event management",
+  "wiki": "Security_information_and_event_management",
+  "track": "Security"
+ },
+ {
+  "term": "AI alignment",
+  "wiki": "AI_alignment",
+  "track": "AI / ML"
+ },
+ {
+  "term": "Intrusion detection system",
+  "wiki": "Intrusion_detection_system",
+  "track": "Security"
+ },
+ {
+  "term": "Mechanistic interpretability",
+  "wiki": "Mechanistic_interpretability",
+  "track": "AI / ML"
+ },
+ {
+  "term": "Honeypot",
+  "wiki": "Honeypot_(computing)",
+  "track": "Security"
+ },
+ {
+  "term": "Federated learning",
+  "wiki": "Federated_learning",
+  "track": "AI / ML"
+ },
+ {
+  "term": "Threat model",
+  "wiki": "Threat_model",
+  "track": "Security"
+ },
+ {
+  "term": "Contrastive Language-Image Pre-training",
+  "wiki": "Contrastive_Language-Image_Pre-training",
+  "track": "AI / ML"
+ },
+ {
+  "term": "Common Vulnerability Scoring System",
+  "wiki": "Common_Vulnerability_Scoring_System",
+  "track": "Security"
+ },
+ {
+  "term": "Defense in depth",
+  "wiki": "Defense_in_depth_(computing)",
+  "track": "Security"
+ },
+ {
+  "term": "Prompt injection",
+  "wiki": "Prompt_injection",
+  "track": "Security"
+ },
+ {
+  "term": "Cyber kill chain",
+  "wiki": "Cyber_kill_chain",
+  "track": "Security"
+ },
+ {
+  "term": "Mimikatz",
+  "wiki": "Mimikatz",
+  "track": "Security"
+ }
+]
