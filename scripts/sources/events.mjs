@@ -85,11 +85,16 @@ async function luma() {
 const EB_PAGES = ['ca--carson', 'ca--long-beach', 'ca--torrance', 'ca--los-angeles', 'ca--santa-monica', 'ca--pasadena'];
 
 async function eventbrite() {
+  const failures = [];
   const pages = await Promise.all(
     EB_PAGES.map((slug) =>
-      fetchText(`https://www.eventbrite.com/d/${slug}/free--events/`).catch(() => ''),
+      fetchText(`https://www.eventbrite.com/d/${slug}/free--events/`).catch((err) => {
+        failures.push(`${slug}: ${err.message}`);
+        return '';
+      }),
     ),
   );
+  if (failures.length === EB_PAGES.length) throw new Error(`all pages failed (${failures[0]})`);
   const out = [];
   for (const html of pages) {
     for (const block of ldBlocks(html)) {
