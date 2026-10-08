@@ -11,6 +11,7 @@ CSS and JS with no build step. It auto-scrolls each pane and polls for fresh dat
 
 | Group | Panes | Sources |
 |---|---|---|
+| Today | Quote of the day, three daily 1% challenges, habit checklist with streak and 7-day history, book of the week; panes for mind and character, body and personal care, people you follow | `public/growth.json` (challenges, quotes, default habits), `scripts/data/books.json`, James Clear, Farnam Street, Mark Manson, Psyche, Daily Stoic, Ryan Holiday, Cal Newport, Greater Good, Art of Manliness, Nerd Fitness, Peter Attia, Men's Health, Huberman Lab, Google News, ZenQuotes, Open Library covers |
 | News | India, World, USA | The Hindu, Indian Express, NDTV, TOI, Google News IN, BBC, Al Jazeera, Guardian, NPR, DW, NYT, CBS, ABC, PBS |
 | AI | AI news, research papers, techniques, new models and pricing, Hugging Face trending, tool releases | Google News (Anthropic / OpenAI / open-weight), Verge, TechCrunch, OpenAI, DeepMind, r/LocalLLaMA, HF Daily Papers, arXiv cs.CR + cs.NI, Simon Willison, PortSwigger, Trail of Bits, Project Zero, Lil'Log, Raschka, OpenRouter, GitHub releases |
 | Security | News, exploited and critical CVEs, ransomware victims, CTF calendar | THN, BleepingComputer, Krebs, Dark Reading, SecurityWeek, The Record, CISA KEV, NVD, ransomware.live, CTFtime |
@@ -56,5 +57,8 @@ and each run processes at most 6 new articles.
 - Feeds per pane: `scripts/sources/*.mjs`
 - Concept-of-the-day terms: `scripts/data/concepts.json`
 - Event price ceiling and date window: top of `scripts/sources/events.mjs`
+- Daily challenges, quotes and default habits: `public/growth.json`. Reading list: `scripts/data/books.json` (one book per week, covers by ISBN).
+- Habit ticks, streaks and the 1.01^n score are stored in the browser's localStorage, so they don't sync between devices.
+- **Focus** hides every news feed and keeps Today, Chess and Knowledge. The top bar counts minutes on the board today and shows a reminder after 30 minutes.
 - Keyboard: `P` pauses or resumes all auto-scrolling. Hovering a pane also pauses it.
 - The mouse wheel always scrolls the page. Click inside a pane (or Tab to it) to scroll that pane; moving the pointer out or pressing Esc gives the wheel back to the page.

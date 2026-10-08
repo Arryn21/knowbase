@@ -9,6 +9,7 @@ import * as pulse from './sources/pulse.mjs';
 import * as know from './sources/knowledge.mjs';
 import { la_events } from './sources/events.mjs';
 import * as chess from './sources/chess.mjs';
+import * as growth from './sources/growth.mjs';
 
 const OUT_DIR = new URL('../public/data/', import.meta.url);
 const SITE_URL = process.env.SITE_URL || 'https://knowbase.vishaltharu.com';
@@ -17,6 +18,11 @@ const ONLY = process.argv.find((a) => a.startsWith('--only='))?.slice(7).split('
 
 // id, group, title, ttl (minutes), builder
 const PANES = [
+  ['growth_mind', 'growth', 'Mind and character', 60, growth.growth_mind],
+  ['growth_body', 'growth', 'Body and personal care', 60, growth.growth_body],
+  ['people', 'growth', 'People you follow', 30, growth.people],
+  ['books', 'growth', 'Reading list', 1440, growth.books],
+
   ['india', 'news', 'India', 15, news.india],
   ['world', 'news', 'World', 15, news.world],
   ['usa', 'news', 'USA', 15, news.usa],

@@ -25,17 +25,22 @@
       <span class="brand-mark">kb</span><span class="brand-name">knowbase</span>
     </a>
     <nav class="jump" aria-label="Sections">
-      <a href="#news">News</a>
-      <a href="#ai">AI</a>
-      <a href="#security">Security</a>
-      <a href="#pulse">Pulse</a>
+      <a href="#today">Today</a>
+      <a href="#news" data-feed>News</a>
+      <a href="#ai" data-feed>AI</a>
+      <a href="#security" data-feed>Security</a>
+      <a href="#pulse" data-feed>Pulse</a>
       <a href="#chess">Chess</a>
-      <a href="#local">LA</a>
+      <a href="#local" data-feed>LA</a>
       <a href="#knowledge">Knowledge</a>
     </nav>
     <div class="clocks" id="clocks" aria-label="World clocks"></div>
     <a class="weather" id="weather" href="https://open-meteo.com/" target="_blank" rel="noopener" aria-label="Weather in Carson"></a>
     <div class="controls">
+      <span class="time-today" id="timeToday" title="Time on knowbase today"></span>
+      <button class="pill-btn" id="focusToggle" type="button" aria-pressed="false" title="Hide the news feeds and keep only Today, Chess and Knowledge">
+        <i class="ph ph-target" aria-hidden="true"></i><span>Focus</span>
+      </button>
       <button class="pill-btn" id="pauseAll" type="button" aria-pressed="false" title="Pause or resume auto-scroll in every pane (shortcut: P)">
         <i class="ph ph-pause" aria-hidden="true"></i><span>Pause</span>
       </button>
@@ -53,22 +58,28 @@
   </div>
 
   <main id="top">
-    <section class="group" data-hue="news" id="news" aria-labelledby="h-news">
+    <section class="group" data-hue="growth" id="today" aria-labelledby="h-today">
+      <h2 id="h-today">Today</h2>
+      <div class="today" id="todayGrid"></div>
+      <div class="grid" data-cols style="--cols: 3" data-panes="growth_mind growth_body people"></div>
+    </section>
+
+    <section class="group feed-group" data-hue="news" id="news" aria-labelledby="h-news">
       <h2 id="h-news">News</h2>
       <div class="grid" data-cols style="--cols: 3" data-panes="india world usa"></div>
     </section>
 
-    <section class="group" data-hue="ai" id="ai" aria-labelledby="h-ai">
+    <section class="group feed-group" data-hue="ai" id="ai" aria-labelledby="h-ai">
       <h2 id="h-ai">AI</h2>
       <div class="grid" data-cols style="--cols: 3" data-panes="ai_news research techniques new_models hf_trending releases"></div>
     </section>
 
-    <section class="group" data-hue="security" id="security" aria-labelledby="h-security">
+    <section class="group feed-group" data-hue="security" id="security" aria-labelledby="h-security">
       <h2 id="h-security">Security</h2>
       <div class="grid" data-cols style="--cols: 4" data-panes="cyber_news vulns ransomware ctf"></div>
     </section>
 
-    <section class="group" data-hue="pulse" id="pulse" aria-labelledby="h-pulse">
+    <section class="group feed-group" data-hue="pulse" id="pulse" aria-labelledby="h-pulse">
       <h2 id="h-pulse">Pulse</h2>
       <div class="grid" data-cols style="--cols: 3" data-panes="hn github_trending community"></div>
     </section>
@@ -81,7 +92,7 @@
       </div>
     </section>
 
-    <section class="group" data-hue="local" id="local" aria-labelledby="h-local">
+    <section class="group feed-group" data-hue="local" id="local" aria-labelledby="h-local">
       <h2 id="h-local">Around LA</h2>
       <div class="grid grid-local">
         <article class="pane pane-events" id="pane-la_events"></article>
@@ -94,6 +105,11 @@
       <div class="knowledge" id="knowledgeGrid"></div>
     </section>
   </main>
+
+  <div class="nudge" id="nudge" role="status" hidden>
+    <p></p>
+    <button class="pill-btn" type="button" id="nudgeClose">Got it</button>
+  </div>
 
   <footer class="foot">
     <p>Headlines link to their publishers. Data refreshes every 15 minutes.</p>

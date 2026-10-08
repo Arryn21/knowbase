@@ -1,0 +1,79 @@
+{
+  "challenges": [
+    { "cat": "Mind", "from": "Patrick Jane", "text": "Learn the names of five people you meet or see today. Recall all five before bed." },
+    { "cat": "Mind", "from": "Patrick Jane", "text": "Build a memory palace from ten spots in your home. Store today's to-do list there and recall it without notes tonight." },
+    { "cat": "Mind", "from": "Elon Musk", "text": "Take a problem you're stuck on. Write only the facts you're certain of, then build a solution up from those." },
+    { "cat": "Mind", "text": "Read 20 pages of nonfiction. Write two sentences on what you'll do differently because of it." },
+    { "cat": "Mind", "text": "Explain one idea you learned this week to someone in under two minutes. If you stumble, reread it." },
+    { "cat": "Mind", "text": "Write down a belief you hold strongly, then the best argument against it." },
+    { "cat": "Mind", "text": "Do 15 minutes of chess tactics with the engine off. Write down the one pattern you missed." },
+    { "cat": "Mind", "from": "Elon Musk", "text": "Read one explainer on a physics or engineering idea and summarize it in a single sentence." },
+    { "cat": "Mind", "text": "Learn one new word and use it in conversation before dinner." },
+    { "cat": "Mind", "from": "Patrick Jane", "text": "Sit somewhere public for ten minutes. Guess one person's job from what you can see, then note what gave it away." },
+
+    { "cat": "Body", "from": "Henry Cavill", "text": "100 push-ups today, in as many sets as it takes." },
+    { "cat": "Body", "from": "Bruce Lee", "text": "Throw one punch or kick 200 times, slowly, with clean form. Quality over speed." },
+    { "cat": "Body", "from": "Bruce Lee", "text": "Stretch for 15 minutes tonight: hips, hamstrings and shoulders." },
+    { "cat": "Body", "text": "Get outside within an hour of waking and spend ten minutes in daylight." },
+    { "cat": "Body", "text": "Walk 8,000 steps. Do at least one walk with the phone left at home." },
+    { "cat": "Body", "text": "No food in the two hours before bed." },
+    { "cat": "Body", "text": "Hold a plank for your best time, then try to add ten seconds." },
+    { "cat": "Body", "text": "End your shower with 60 seconds of cold water." },
+    { "cat": "Body", "text": "Pick a bedtime and keep it tonight. Screens off for the last 30 minutes." },
+    { "cat": "Body", "from": "Henry Cavill", "text": "Train legs today. Squats or lunges, whatever you have, until the last set is hard." },
+    { "cat": "Body", "text": "Track your water today and get to about three liters." },
+
+    { "cat": "Presence", "from": "Lucifer Morningstar", "text": "In your next three conversations, hold eye contact a beat longer than feels normal." },
+    { "cat": "Presence", "from": "Lucifer Morningstar", "text": "Ask someone what they really want out of this year. Then listen without giving advice." },
+    { "cat": "Presence", "from": "Lucifer Morningstar", "text": "Go the whole day without saying anything you don't mean, including polite white lies." },
+    { "cat": "Presence", "from": "Lucifer Morningstar", "text": "Dress one notch sharper than the day calls for." },
+    { "cat": "Presence", "from": "Patrick Jane", "text": "Notice something about a friend or coworker you've never noticed before, and mention it kindly." },
+    { "cat": "Presence", "text": "Talk 10% slower today. Pause for a second before you answer questions." },
+    { "cat": "Presence", "text": "Record yourself explaining something for 60 seconds. Watch it once and fix one thing." },
+    { "cat": "Presence", "text": "Compliment one person specifically. Name what they did, not just that it was good." },
+    { "cat": "Presence", "text": "Check your posture every two hours. Set a reminder so you actually do it." },
+
+    { "cat": "Care", "text": "Wash your face and moisturize tonight. Sunscreen tomorrow morning, even if it's cloudy." },
+    { "cat": "Care", "text": "Floss tonight." },
+    { "cat": "Care", "text": "If it's been more than four weeks since your last haircut, book one today." },
+    { "cat": "Care", "text": "Clear and wipe down your desk for ten minutes." },
+    { "cat": "Care", "text": "Cook one meal yourself today with real protein and a vegetable." },
+    { "cat": "Care", "text": "Iron or steam tomorrow's clothes tonight." },
+
+    { "cat": "Focus", "from": "Elon Musk", "text": "Work one 90-minute block with notifications off and the phone in another room." },
+    { "cat": "Focus", "text": "No social media until noon. Check the Today section here instead." },
+    { "cat": "Focus", "text": "Do your hardest task before you open messages." },
+    { "cat": "Focus", "text": "Before bed, write the two tasks that would make tomorrow a good day." },
+    { "cat": "Focus", "text": "Mute or delete one app or account that leaves you feeling worse after you use it." },
+    { "cat": "Focus", "text": "Finish one thing you started and dropped." },
+
+    { "cat": "Character", "from": "Bruce Lee", "text": "Admit one mistake out loud today and say what you'll do about it." },
+    { "cat": "Character", "from": "Lucifer Morningstar", "text": "Spend 30 minutes on a hard skill you're bad at: piano, a language, a new kind of code." },
+    { "cat": "Character", "from": "Henry Cavill", "text": "Build or repair something with your hands for 30 minutes." },
+    { "cat": "Character", "text": "Say no to one request that doesn't fit your goals." },
+    { "cat": "Character", "text": "Do one useful thing for someone and don't mention it." }
+  ],
+
+  "quotes": [
+    { "q": "Absorb what is useful, discard what is useless and add what is specifically your own.", "a": "Bruce Lee" },
+    { "q": "I fear not the man who has practiced 10,000 kicks once, but I fear the man who has practiced one kick 10,000 times.", "a": "Bruce Lee" },
+    { "q": "Knowing is not enough, we must apply. Willing is not enough, we must do.", "a": "Bruce Lee" },
+    { "q": "Mistakes are always forgivable, if one has the courage to admit them.", "a": "Bruce Lee" },
+    { "q": "If you spend too much time thinking about a thing, you'll never get it done.", "a": "Bruce Lee" },
+    { "q": "Do not pray for an easy life, pray for the strength to endure a difficult one.", "a": "Bruce Lee" },
+    { "q": "When something is important enough, you do it even if the odds are not in your favor.", "a": "Elon Musk" },
+    { "q": "Persistence is very important. You should not give up unless you are forced to give up.", "a": "Elon Musk" },
+    { "q": "I think it's very important to have a feedback loop, where you're constantly thinking about what you've done and how you could be doing it better.", "a": "Elon Musk" },
+    { "q": "What is it you truly desire?", "a": "Lucifer Morningstar, Lucifer" }
+  ],
+
+  "habits": [
+    "Read 10 pages",
+    "Train or stretch",
+    "Daily chess puzzle",
+    "Concept of the day",
+    "Today's 1% challenge",
+    "No doomscrolling",
+    "Lights out on time"
+  ]
+}
