@@ -1,3 +1,6 @@
+import { esc, safeUrl, store } from './util.js';
+import { initToday, renderToday, addReviewCard } from './today.js';
+
 // knowbase client: renders data/feeds.json, auto-scrolls panes, polls for updates.
 const DATA_URL = 'data/feeds.json';
 const POLL_MS = 5 * 60 * 1000;
@@ -19,32 +22,6 @@ const paneIcon = (id) => `<i class="ph ${PANE_ICONS[id] || 'ph-list'} pi" aria-h
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
 
 // ---------- small utils ----------
-const esc = (s) =>
-  String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
-const safeUrl = (u) => {
-  try {
-    const url = new URL(u);
-    return url.protocol === 'https:' || url.protocol === 'http:' ? url.href : '#';
-  } catch {
-    return '#';
-  }
-};
-const store = {
-  get(k, d = null) {
-    try {
-      const v = localStorage.getItem(k);
-      return v == null ? d : JSON.parse(v);
-    } catch {
-      return d;
-    }
-  },
-  set(k, v) {
-    try {
-      localStorage.setItem(k, JSON.stringify(v));
-    } catch {}
-  },
-};
-
 function ago(iso) {
   const t = Date.parse(iso);
   if (!t) return '';
@@ -449,6 +426,7 @@ function renderKnowledge(data) {
       <p>${esc(c.extract)}</p>
       <div class="concept-nav">
         <a class="badge" href="${safeUrl(c.url)}" target="_blank" rel="noopener">Read on Wikipedia</a>
+        <button class="badge" type="button" data-review="concept">Add to review</button>
         ${concepts.length > 1 ? `<button class="badge" type="button" id="nextConcept">Next concept</button>` : ''}
       </div></article>`);
   }
@@ -459,7 +437,8 @@ function renderKnowledge(data) {
       <p class="big"><small>${esc(t.id)}</small><a href="${safeUrl(t.url)}" target="_blank" rel="noopener">${esc(t.name)}</a></p>
       <div class="tags">${t.tactics.map((x) => `<span class="badge hot">${esc(x)}</span>`).join('')}${t.platforms.slice(0, 4).map((x) => `<span class="badge">${esc(x)}</span>`).join('')}</div>
       <p>${esc(t.description)}</p>
-      ${t.detection ? `<p><b>Detection:</b> ${esc(t.detection)}</p>` : ''}</article>`);
+      ${t.detection ? `<p><b>Detection:</b> ${esc(t.detection)}</p>` : ''}
+      <div class="concept-nav"><button class="badge" type="button" data-review="attack">Add to review</button></div></article>`);
   }
   const w = p.wikipedia;
   if (w?.featured) {
@@ -481,6 +460,17 @@ function renderKnowledge(data) {
   }
   const grid = document.getElementById('knowledgeGrid');
   grid.innerHTML = cards.join('') || '<div class="empty">Knowledge cards load after the first data refresh.</div>';
+  grid.querySelectorAll('[data-review]').forEach((btn) =>
+    btn.addEventListener('click', () => {
+      const c = concepts[conceptIdx % concepts.length];
+      const added =
+        btn.dataset.review === 'concept'
+          ? addReviewCard({ front: `What is ${c.term}?`, back: c.extract, source: c.url })
+          : addReviewCard({ front: `${t.id} ${t.name}: what is it and how would you detect it?`, back: `${t.description} ${t.detection ? 'Detection: ' + t.detection : ''}`, source: t.url });
+      btn.textContent = added ? 'Added to review' : 'Already in review';
+      btn.disabled = true;
+    }),
+  );
   grid.querySelector('#nextConcept')?.addEventListener('click', () => {
     conceptIdx++;
     renderKnowledge(data);
@@ -539,206 +529,6 @@ function renderPuzzle(pane) {
       ${cc ? `<div class="daily-other"><a href="${safeUrl(cc.url)}" target="_blank" rel="noopener">Chess.com daily: ${esc(cc.title)}</a><span>Second puzzle for today</span></div>` : ''}
     </div>`;
 }
-
-// ---------- today: the 1% board ----------
-// Progress lives in this browser's localStorage (kb.growth), keyed by local date.
-let growthData = null;
-const localDay = (d = new Date()) =>
-  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-const dayNumber = (ymd) => Math.floor(Date.parse(ymd + 'T00:00:00Z') / 864e5);
-const shiftDay = (ymd, n) => new Date(Date.parse(ymd + 'T00:00:00Z') + n * 864e5).toISOString().slice(0, 10);
-
-const growth = Object.assign({ start: localDay(), days: {}, habits: null }, store.get('kb.growth', {}));
-const saveGrowth = () => store.set('kb.growth', growth);
-const dayRecord = (ymd) => (growth.days[ymd] ??= { ch: [], habits: [] });
-const habitList = () => growth.habits ?? growthData?.habits ?? [];
-const doneCount = (ymd) => {
-  const r = growth.days[ymd];
-  return r ? r.ch.length + r.habits.length : 0;
-};
-
-const CAT_ORDER = ['Mind', 'Body', 'Presence', 'Focus', 'Care', 'Character'];
-// Three challenges from three different categories, rotating every day.
-function todaysChallenges(ymd) {
-  const n = dayNumber(ymd);
-  return [0, 2, 4].map((k) => {
-    const list = growthData.challenges.filter((c) => c.cat === CAT_ORDER[(n + k) % CAT_ORDER.length]);
-    return list[(n + k * 3) % list.length];
-  });
-}
-
-function streak(today) {
-  let d = doneCount(today) ? today : shiftDay(today, -1);
-  let n = 0;
-  while (doneCount(d)) {
-    n++;
-    d = shiftDay(d, -1);
-  }
-  return n;
-}
-
-let renderedDay = null;
-function renderToday() {
-  if (!growthData) return;
-  const ymd = localDay();
-  renderedDay = ymd;
-  const rec = growth.days[ymd] || { ch: [], habits: [] };
-  const n = dayNumber(ymd);
-  const habits = habitList();
-  const activeDays = Object.keys(growth.days).filter(doneCount).length;
-  const challenges = todaysChallenges(ymd);
-
-  const quote = growthData.quotes[n % growthData.quotes.length];
-  const zen = current?.panes.books?.zen;
-  const books = current?.panes.books?.books || [];
-  const week = Math.floor(n / 7);
-  const book = books[week % (books.length || 1)];
-  const upNext = books.length ? [1, 2, 3].map((k) => books[(week + k) % books.length]) : [];
-
-  const weekCells = [-6, -5, -4, -3, -2, -1, 0]
-    .map((off) => {
-      const d = shiftDay(ymd, off);
-      const f = Math.min(1, doneCount(d) / (3 + habits.length));
-      const label = new Date(d + 'T12:00:00Z').toLocaleDateString('en-US', { timeZone: 'UTC', weekday: 'narrow' });
-      return `<div title="${d}: ${doneCount(d)} done"><span style="--f:${f.toFixed(2)}"></span>${label}</div>`;
-    })
-    .join('');
-
-  document.getElementById('todayGrid').innerHTML = `
-    <article class="card quote-card">
-      <i class="ph ph-quotes" aria-hidden="true"></i>
-      <blockquote>${esc(quote.q)}<cite>${esc(quote.a)}</cite></blockquote>
-      ${zen ? `<div class="zen">${esc(zen.q)}<cite>${esc(zen.a)} · via ZenQuotes</cite></div>` : ''}
-    </article>
-
-    <article class="card card-challenge">
-      <div class="card-head">
-        <h3>Today's 1%</h3>
-        <div class="score"><b>${(1.01 ** activeDays).toFixed(2)}×</b> after ${activeDays} active day${activeDays === 1 ? '' : 's'}<br>${streak(ymd)}-day streak</div>
-      </div>
-      <ul class="checks">${challenges
-        .map(
-          (c) => `<li><label class="check${rec.ch.includes(c.text) ? ' done' : ''}">
-            <input type="checkbox" data-ch="${esc(c.text)}"${rec.ch.includes(c.text) ? ' checked' : ''} />
-            <span class="txt">${esc(c.text)}<span class="tag">${esc(c.cat)}${c.from ? ` · inspired by ${esc(c.from)}` : ''}</span></span><span></span>
-          </label></li>`,
-        )
-        .join('')}</ul>
-    </article>
-
-    <article class="card card-habits">
-      <h3>Daily habits</h3>
-      <ul class="checks">${habits
-        .map(
-          (h, i) => `<li><label class="check${rec.habits.includes(h) ? ' done' : ''}">
-            <input type="checkbox" data-habit="${esc(h)}"${rec.habits.includes(h) ? ' checked' : ''} />
-            <span class="txt">${esc(h)}</span>
-            <button class="rm" type="button" data-rm="${i}" title="Remove habit" aria-label="Remove ${esc(h)}"><i class="ph ph-x"></i></button>
-          </label></li>`,
-        )
-        .join('')}</ul>
-      <form class="add-habit" id="addHabit"><input name="h" maxlength="60" placeholder="Add a habit" aria-label="New habit" /><button class="pill-btn" type="submit"><i class="ph ph-plus" aria-hidden="true"></i><span>Add</span></button></form>
-      <div class="week" aria-label="Last 7 days">${weekCells}</div>
-    </article>
-
-    <article class="card card-book">
-      <h3>Book of the week</h3>
-      ${
-        book
-          ? `<a class="book" href="${safeUrl(book.url)}" target="_blank" rel="noopener">
-          <img src="${safeUrl(book.cover)}" alt="Cover of ${esc(book.title)}" loading="lazy" onerror="this.outerHTML='<div class=nocover>Cover unavailable</div>'" />
-          <div><b>${esc(book.title)}</b><span>${esc(book.author)}${book.year ? `, ${book.year}` : ''}</span><p>${esc(book.why)}</p></div>
-        </a>
-        <ul class="upnext"><li><b>Up next</b></li>${upNext.map((b) => `<li>${esc(b.title)}, ${esc(b.author)}</li>`).join('')}</ul>`
-          : '<p>The reading list loads after the next data refresh.</p>'
-      }
-    </article>`;
-}
-
-document.getElementById('todayGrid').addEventListener('change', (e) => {
-  const box = e.target.closest('input[type=checkbox]');
-  if (!box) return;
-  const rec = dayRecord(localDay());
-  const [key, val] = box.dataset.ch ? ['ch', box.dataset.ch] : ['habits', box.dataset.habit];
-  rec[key] = box.checked ? [...new Set([...rec[key], val])] : rec[key].filter((x) => x !== val);
-  saveGrowth();
-  renderToday();
-});
-document.getElementById('todayGrid').addEventListener('click', (e) => {
-  const rm = e.target.closest('[data-rm]');
-  if (!rm) return;
-  e.preventDefault();
-  growth.habits = habitList().filter((_, i) => i !== Number(rm.dataset.rm));
-  saveGrowth();
-  renderToday();
-});
-document.getElementById('todayGrid').addEventListener('submit', (e) => {
-  e.preventDefault();
-  const h = new FormData(e.target).get('h').trim();
-  if (h && !habitList().includes(h)) {
-    growth.habits = [...habitList(), h];
-    saveGrowth();
-  }
-  renderToday();
-});
-
-// ---------- time on board + nudge ----------
-const NUDGE_MINUTES = 30;
-let timeLog = store.get('kb.time', {});
-const freshTimeLog = () => ({ day: localDay(), secs: 0, nudged: false });
-if (timeLog.day !== localDay()) timeLog = freshTimeLog();
-
-function renderTime() {
-  const m = Math.floor(timeLog.secs / 60);
-  const el = document.getElementById('timeToday');
-  el.textContent = `${m}m today`;
-  el.classList.toggle('over', m >= NUDGE_MINUTES);
-  if (m >= NUDGE_MINUTES && !timeLog.nudged) {
-    const open = growthData ? todaysChallenges(localDay()).filter((c) => !dayRecord(localDay()).ch.includes(c.text)).length : 0;
-    const nudge = document.getElementById('nudge');
-    nudge.querySelector('p').textContent =
-      `${m} minutes here today, and the feeds will still be here tomorrow.` +
-      (open ? ` ${open} of today's challenges ${open === 1 ? 'is' : 'are'} still open.` : ' Your challenges are done. Go enjoy the day.');
-    nudge.hidden = false;
-  }
-}
-document.getElementById('nudgeClose').addEventListener('click', () => {
-  timeLog.nudged = true;
-  store.set('kb.time', timeLog);
-  document.getElementById('nudge').hidden = true;
-});
-setInterval(() => {
-  if (document.hidden) return;
-  if (timeLog.day !== localDay()) timeLog = freshTimeLog();
-  timeLog.secs += 15;
-  store.set('kb.time', timeLog);
-  renderTime();
-  if (renderedDay && renderedDay !== localDay()) renderToday(); // rolled past midnight
-}, 15000);
-
-// ---------- focus mode ----------
-const focusBtn = document.getElementById('focusToggle');
-function applyFocus(on) {
-  document.body.classList.toggle('focus', on);
-  focusBtn.setAttribute('aria-pressed', String(on));
-  focusBtn.innerHTML = on
-    ? '<i class="ph ph-list" aria-hidden="true"></i><span>Show all</span>'
-    : '<i class="ph ph-target" aria-hidden="true"></i><span>Focus</span>';
-}
-focusBtn.addEventListener('click', () => {
-  const on = !document.body.classList.contains('focus');
-  store.set('kb.focus', on);
-  applyFocus(on);
-});
-applyFocus(store.get('kb.focus', false));
-renderTime();
-fetch('growth.json')
-  .then((r) => r.json())
-  .then((j) => {
-    growthData = j;
-    renderToday();
-  })
-  .catch((err) => console.error('knowbase: growth.json failed', err));
 
 // ---------- boot ----------
 function mountPanes(panes) {
@@ -809,6 +599,7 @@ themeBtn.addEventListener('click', () => {
 
 syncPauseAll();
 syncThemeBtn();
+initToday(() => current);
 mountPanes();
 renderEventsShell();
 renderClocks();

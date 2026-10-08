@@ -59,7 +59,7 @@
 
   <main id="top">
     <section class="group" data-hue="growth" id="today" aria-labelledby="h-today">
-      <h2 id="h-today">Today</h2>
+      <h2 id="h-today">Today <button class="pill-btn sync-btn" id="syncBtn" type="button"></button></h2>
       <div class="today" id="todayGrid"></div>
       <div class="grid" data-cols style="--cols: 3" data-panes="growth_mind growth_body people"></div>
     </section>
@@ -105,6 +105,31 @@
       <div class="knowledge" id="knowledgeGrid"></div>
     </section>
   </main>
+
+  <dialog class="sync-dialog" id="syncDialog" aria-labelledby="syncTitle">
+    <form method="dialog">
+      <h3 id="syncTitle">Sync across devices</h3>
+      <p>Habits, journal, reading progress and review cards are encrypted here with your passphrase, then saved to a private gist on your GitHub account. Nobody can read the gist without the passphrase, including GitHub.</p>
+      <div data-when="off">
+        <ol>
+          <li>Create a <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">fine-grained GitHub token</a>. Under Account permissions, set <b>Gists</b> to Read and write. Nothing else is needed.</li>
+          <li>Paste it below with a passphrase. Use the same passphrase on every device. If you forget it, the synced copy can't be recovered.</li>
+        </ol>
+        <label class="field">GitHub token<input name="token" type="password" autocomplete="off" spellcheck="false" /></label>
+        <label class="field">Passphrase (8+ characters)<input name="pass" type="password" autocomplete="new-password" minlength="8" /></label>
+        <button class="pill-btn primary" type="submit"><span>Connect</span></button>
+      </div>
+      <div data-when="on" hidden>
+        <p>Sync is on for this device. Changes upload a couple of seconds after you make them, and other devices' changes come in when you return to the tab.</p>
+        <div class="row-actions">
+          <button class="pill-btn primary" type="button" data-act="sync-now"><span>Sync now</span></button>
+          <button class="pill-btn" type="button" data-act="sync-off"><span>Turn off on this device</span></button>
+        </div>
+      </div>
+      <p class="sync-msg" role="status"></p>
+      <button class="dialog-close" type="button" data-act="close" aria-label="Close"><i class="ph ph-x"></i></button>
+    </form>
+  </dialog>
 
   <div class="nudge" id="nudge" role="status" hidden>
     <p></p>
