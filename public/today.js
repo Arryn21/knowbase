@@ -1,7 +1,7 @@
 // The Today section: daily 1% challenges, habits, evening journal, reading tracker,
 // spaced-repetition review cards and the weekly review. State lives in localStorage
 // (kb.growth) and, when sync is set up, in an encrypted gist (see sync.js).
-import { esc, safeUrl, store } from './util.js';
+import { esc, safeUrl, store, sparkline } from './util.js';
 import * as sync from './sync.js';
 
 let growthData = null;
@@ -253,32 +253,74 @@ export function renderToday() {
   const ymd = localDay();
   renderedDay = ymd;
   grid().innerHTML = [quoteCard(ymd), challengeCard(ymd), habitsCard(ymd), bookCard(ymd), journalCard(ymd), readingCard(ymd), reviewCard(ymd), weekCard(ymd)].join('');
+  // Ring grows from where it was to the new value.
+  const fg = grid().querySelector('.ring-fg');
+  if (fg) {
+    const to = Number(fg.dataset.to);
+    lastRingOffset = to;
+    requestAnimationFrame(() => requestAnimationFrame(() => (fg.style.strokeDashoffset = to)));
+  }
   renderSyncBtn();
 }
 
 function quoteCard(ymd) {
   const quote = growthData.quotes[dayNumber(ymd) % growthData.quotes.length];
   const zen = getFeed()?.panes.books?.zen;
-  return `<article class="card quote-card">
-    <i class="ph ph-quotes" aria-hidden="true"></i>
-    <blockquote>${esc(quote.q)}<cite>${esc(quote.a)}</cite></blockquote>
-    ${zen ? `<div class="zen">${esc(zen.q)}<cite>${esc(zen.a)} · via ZenQuotes</cite></div>` : ''}
+  const potd = getFeed()?.panes.wikipedia?.potd;
+  const bg = potd ? ` style="--hero:url('${esc(safeUrl(potd.src))}')"` : '';
+  // The credit links to the Commons file page, which carries the author and license.
+  const credit = potd
+    ? `<a class="hero-credit" href="${safeUrl(potd.url)}" target="_blank" rel="noopener">Picture of the day: ${esc(potd.title)}${potd.artist ? ` · ${esc(potd.artist)}` : ''}${potd.license ? ` · ${esc(potd.license)}` : ''}</a>`
+    : '';
+  return `<article class="card quote-card${potd ? ' hero-card' : ''}"${bg}>
+    <div class="hero-txt">
+      <i class="ph ph-quotes" aria-hidden="true"></i>
+      <blockquote>${esc(quote.q)}<cite>${esc(quote.a)}</cite></blockquote>
+      ${zen ? `<div class="zen">${esc(zen.q)}<cite>${esc(zen.a)} · via ZenQuotes</cite></div>` : ''}
+    </div>
+    ${credit}
   </article>`;
 }
+
+// Challenge authors map to the person whose photo the People pane has.
+const FACE_OF = { 'Patrick Jane': 'The Mentalist', 'Lucifer Morningstar': 'Lucifer', 'Tony Stark': 'Iron Man' };
+const faceImg = (who) => {
+  const f = getFeed()?.panes.people?.faces?.[FACE_OF[who] || who];
+  return f ? `<img class="tag-face" src="${safeUrl(f.src)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()" />` : '';
+};
+
+/** 1.01^(active days so far) for each of the last `n` days, for the growth line. */
+function growthSeries(ymd, n = 30) {
+  const active = Object.keys({ ...G.days, ...G.journal }).filter(doneCount).sort();
+  const out = [];
+  for (let k = n - 1; k >= 0; k--) {
+    const d = shiftDay(ymd, -k);
+    out.push(1.01 ** active.filter((a) => a <= d).length);
+  }
+  return out;
+}
+
+// Habit ring: 2*pi*r for r = 20.
+const RING_C = 125.66;
+let lastRingOffset = RING_C;
 
 function challengeCard(ymd) {
   const rec = G.days[ymd] || { ch: [] };
   const activeDays = Object.keys({ ...G.days, ...G.journal }).filter(doneCount).length;
+  const st = streak(ymd);
+  const series = growthSeries(ymd);
   return `<article class="card card-challenge">
-    <div class="card-head">
-      <h3>Today's 1%</h3>
-      <div class="score"><b>${(1.01 ** activeDays).toFixed(2)}×</b> after ${activeDays} active day${activeDays === 1 ? '' : 's'}<br>${streak(ymd)}-day streak</div>
+    <div class="card-head"><h3>Today's 1%</h3></div>
+    <div class="growth">
+      <div class="growth-num"><b>${(1.01 ** activeDays).toFixed(2)}×</b><span>after ${activeDays} active day${activeDays === 1 ? '' : 's'}</span></div>
+      <div class="growth-chart" title="1% score over the last 30 days: ${series[0].toFixed(2)}× to ${series.at(-1).toFixed(2)}×">${sparkline(series, { w: 160, h: 40, area: true, cls: 'growth-line', stretch: true })}<span>last 30 days</span></div>
+      <div class="flame${st ? ' lit' : ''}" title="${st}-day streak"><i class="ph ph-fire" aria-hidden="true"></i><b>${st}</b><span>day streak</span></div>
     </div>
     <ul class="checks">${todaysChallenges(ymd)
       .map(
         (c) => `<li><label class="check${rec.ch.includes(c.text) ? ' done' : ''}">
           <input type="checkbox" data-ch="${esc(c.text)}"${rec.ch.includes(c.text) ? ' checked' : ''} />
-          <span class="txt">${esc(c.text)}<span class="tag">${esc(c.cat)}${c.from ? ` · inspired by ${esc(c.from)}` : ''}</span></span><span></span>
+          <span class="txt">${esc(c.text)}<span class="tag">${c.from ? faceImg(c.from) : ''}${esc(c.cat)}${c.from ? ` · inspired by ${esc(c.from)}` : ''}</span></span><span></span>
         </label></li>`,
       )
       .join('')}</ul>
@@ -295,8 +337,19 @@ function habitsCard(ymd) {
       return `<div title="${d}: ${doneCount(d)} done"><span style="--f:${f.toFixed(2)}"></span>${fmtDay(d, { weekday: 'narrow' })}</div>`;
     })
     .join('');
+  const done = rec.habits.filter((h) => habits.includes(h)).length;
+  const offset = RING_C * (1 - (habits.length ? done / habits.length : 0));
   return `<article class="card card-habits">
-    <h3>Daily habits</h3>
+    <div class="card-head">
+      <h3>Daily habits</h3>
+      <div class="ring" title="${done} of ${habits.length} habits done today">
+        <svg viewBox="0 0 48 48" width="48" height="48" aria-hidden="true" focusable="false">
+          <circle class="ring-bg" cx="24" cy="24" r="20" />
+          <circle class="ring-fg" cx="24" cy="24" r="20" style="stroke-dasharray:${RING_C};stroke-dashoffset:${lastRingOffset}" data-to="${offset.toFixed(2)}" />
+        </svg>
+        <span>${done}/${habits.length}</span>
+      </div>
+    </div>
     <ul class="checks">${habits
       .map(
         (h, i) => `<li><label class="check${rec.habits.includes(h) ? ' done' : ''}">
@@ -446,6 +499,21 @@ function reviewCard(ymd) {
   </article>`;
 }
 
+/** Things done per day this week, Monday to Sunday. Future days stay empty. */
+function weekBars(mon, ymd) {
+  const days = Array.from({ length: 7 }, (_, i) => shiftDay(mon, i));
+  const counts = days.map((d) => (d <= ymd ? doneCount(d) : null));
+  const max = Math.max(1, ...counts.filter((c) => c != null));
+  return `<div class="bars" role="img" aria-label="Things done each day this week: ${days
+    .map((d, i) => `${fmtDay(d, { weekday: 'short' })} ${counts[i] ?? 'upcoming'}`)
+    .join(', ')}">${days
+    .map(
+      (d, i) =>
+        `<div class="bar-col${d === ymd ? ' today' : ''}" title="${esc(fmtDay(d))}: ${counts[i] ?? 0} done"><span class="bar-v">${counts[i] ?? ''}</span><i style="--h:${counts[i] == null ? 0 : (counts[i] / max).toFixed(3)}"></i><span class="bar-d">${fmtDay(d, { weekday: 'narrow' })}</span></div>`,
+    )
+    .join('')}</div>`;
+}
+
 function weekCard(ymd) {
   const mon = mondayOf(ymd);
   const days = [];
@@ -469,6 +537,7 @@ function weekCard(ymd) {
   return `<article class="card card-week">
     <div class="card-head"><h3>This week (from ${esc(fmtDay(mon, { month: 'short', day: 'numeric' }))})</h3><span class="saved" data-saved hidden>Saved</span></div>
     <div class="stats">${stats.map(([k, v]) => `<div><b>${esc(v)}</b><span>${esc(k)}</span></div>`).join('')}</div>
+    ${weekBars(mon, ymd)}
     <details class="review-form"${weekend || rv.best ? ' open' : ''}>
       <summary>Weekly review</summary>
       <div class="review-fields">
@@ -516,8 +585,26 @@ function wireEvents() {
     const ymd = localDay();
     const rec = day(ymd);
     const [key, val] = box.dataset.ch ? ['ch', box.dataset.ch] : ['habits', box.dataset.habit];
+    const before = rec[key].length;
     rec[key] = box.checked ? [...new Set([...rec[key], val])] : rec[key].filter((x) => x !== val);
     touchDay(ymd);
+    if (box.checked) {
+      const r = box.getBoundingClientRect();
+      const x = r.left + r.width / 2;
+      const y = r.top + r.height / 2;
+      const todays = todaysChallenges(ymd).map((c) => c.text);
+      const allChallenges = todays.every((t) => rec.ch.includes(t));
+      const allHabits = habitList().length > 0 && habitList().every((h) => rec.habits.includes(h));
+      if (key === 'ch' && allChallenges && before < rec.ch.length) {
+        burst(x, y, 46, true);
+        toast("All three done. That's today's 1%.");
+      } else if (key === 'habits' && allHabits) {
+        burst(x, y, 36, true);
+        toast('Every habit done today.');
+      } else {
+        burst(x, y, 14);
+      }
+    }
     save();
   });
   g.addEventListener('click', (e) => {
@@ -590,6 +677,46 @@ function wireEvents() {
   });
 }
 
+// ---------- celebrations ----------
+const calm = matchMedia('(prefers-reduced-motion: reduce)');
+
+/** A short particle burst from (x, y). Purely visual; skipped under reduced motion. */
+function burst(x, y, n = 14, big = false) {
+  if (calm.matches) return;
+  let layer = document.getElementById('fx');
+  if (!layer) {
+    layer = document.createElement('div');
+    layer.id = 'fx';
+    layer.setAttribute('aria-hidden', 'true');
+    document.body.append(layer);
+  }
+  for (let i = 0; i < n; i++) {
+    const p = document.createElement('i');
+    const angle = (i / n) * Math.PI * 2 + Math.random() * 0.5;
+    const dist = (big ? 70 : 26) + Math.random() * (big ? 110 : 34);
+    p.style.cssText = `left:${x}px;top:${y}px;--dx:${Math.cos(angle) * dist}px;--dy:${Math.sin(angle) * dist}px;--s:${big ? 1 + Math.random() : 0.6 + Math.random() * 0.6};animation-delay:${Math.random() * 60}ms`;
+    p.className = i % 3 === 0 ? 'alt' : '';
+    p.addEventListener('animationend', () => p.remove());
+    layer.append(p);
+  }
+}
+
+function toast(msg) {
+  let t = document.getElementById('toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'toast';
+    t.setAttribute('role', 'status');
+    document.body.append(t);
+  }
+  t.textContent = msg;
+  t.classList.remove('show');
+  void t.offsetWidth;
+  t.classList.add('show');
+  clearTimeout(toast.timer);
+  toast.timer = setTimeout(() => t.classList.remove('show'), 3800);
+}
+
 // ---------- time on board + nudge ----------
 const NUDGE_MINUTES = 30;
 let timeLog = store.get('kb.time', {});
@@ -602,7 +729,9 @@ function renderTime() {
   el.textContent = `${m}m today`;
   el.classList.toggle('over', m >= NUDGE_MINUTES);
   if (m >= NUDGE_MINUTES && !timeLog.nudged) {
-    const open = growthData ? todaysChallenges(localDay()).filter((c) => !(G.days[localDay()]?.ch || []).includes(c.text)).length : 0;
+    // Wait for the challenge list so the message doesn't claim they're all done.
+    if (!growthData) return;
+    const open = todaysChallenges(localDay()).filter((c) => !(G.days[localDay()]?.ch || []).includes(c.text)).length;
     const nudge = document.getElementById('nudge');
     nudge.querySelector('p').textContent =
       `${m} minutes here today, and the feeds will still be here tomorrow.` +

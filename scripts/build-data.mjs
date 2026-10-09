@@ -10,6 +10,11 @@ import * as know from './sources/knowledge.mjs';
 import { la_events } from './sources/events.mjs';
 import * as chess from './sources/chess.mjs';
 import * as growth from './sources/growth.mjs';
+import { fillImages, pruneImageCache } from './lib/og.mjs';
+
+// Panes whose top stories get a preview image fetched when the feed has none.
+const FILL_IMAGES = new Set(['india', 'world', 'usa', 'ai_news', 'techniques', 'cyber_news', 'hn', 'community', 'chess_news', 'chess_learn', 'growth_mind', 'growth_body', 'people']);
+const FILL_TOP_N = 14;
 
 const OUT_DIR = new URL('../public/data/', import.meta.url);
 const SITE_URL = process.env.SITE_URL || 'https://knowbase.vishaltharu.com';
@@ -55,6 +60,7 @@ const PANES = [
   ['concept', 'knowledge', 'Concept of the day', 720, know.concept],
   ['attack', 'knowledge', 'ATT&CK technique of the day', 720, know.attack],
   ['wikipedia', 'knowledge', 'Wikipedia today', 180, know.wikipedia],
+  ['apod', 'knowledge', 'Astronomy picture of the day', 360, know.apod],
 
   ['status', 'strip', 'Service status', 15, pulse.status],
   ['markets', 'strip', 'Markets', 15, pulse.markets],
@@ -89,6 +95,9 @@ async function main() {
   const prevPanes = prev.feeds.panes || {};
   const panes = {};
   const cache = { ...prev.cache };
+  cache.og ??= {};
+  pruneImageCache(cache.og);
+  const imageBudget = { left: 90 };
 
   await Promise.all(
     PANES.map(async ([id, group, title, ttl, build]) => {
@@ -104,6 +113,7 @@ async function main() {
         const prevForPane = id === 'la_events' ? { articles: cache.articles } : old;
         const { errors = [], articles, ...data } = await withTimeout(build(prevForPane), 240000, id);
         if (articles) cache.articles = articles;
+        if (FILL_IMAGES.has(id) && data.items?.length) await fillImages(data.items.slice(0, FILL_TOP_N), cache.og, imageBudget);
         const hasContent = data.items?.length || Object.entries(data).some(([k, v]) => k !== 'items' && v);
         if (!hasContent && old) {
           throw new Error(`no items (${errors.join('; ') || 'empty response'})`);

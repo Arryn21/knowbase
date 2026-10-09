@@ -25,6 +25,8 @@ export async function quakes() {
       badge: `M${f.properties.mag.toFixed(1)}`,
       meta: near ? `${Math.round(mi)} mi from home` : f.properties.tsunami ? 'tsunami flag' : '',
       mag: f.properties.mag,
+      lat,
+      lon,
     };
   };
   // Keep it short: the 8 most recent SoCal quakes plus the 6 strongest worldwide.
@@ -48,6 +50,7 @@ export async function launches() {
     time: l.net,
     badge: l.status?.abbrev || '',
     meta: l.location || l.pad?.location?.name || '',
+    image: l.image?.thumbnail_url || l.image?.image_url || null,
     upcoming: true,
   }));
   return { items };
@@ -57,8 +60,20 @@ export async function wikipedia() {
   const [y, m, d] = todayPT().split('-');
   const f = await fetchJSON(`https://en.wikipedia.org/api/rest_v1/feed/featured/${y}/${m}/${d}`);
   const pageUrl = (p) => p?.content_urls?.desktop?.page;
+  const img = f.image;
   return {
     items: [],
+    // Picture of the day (Wikimedia Commons). Shown with its description and a link to the
+    // file page, which carries the author and license.
+    potd: img?.image?.source && {
+      // Wikimedia only serves standard thumbnail widths (1280 is one); drop the tracking query.
+      src: (img.thumbnail?.source?.replace(/\/\d+px-/, '/1280px-') || img.image.source).split('?')[0],
+      full: img.image.source,
+      title: stripHtml(img.description?.text || img.title?.replace(/^File:|\.\w+$/g, '') || ''),
+      artist: stripHtml(img.artist?.text || ''),
+      license: img.license?.type || '',
+      url: img.file_page,
+    },
     featured: f.tfa && {
       title: stripHtml(f.tfa.displaytitle || f.tfa.normalizedtitle),
       url: pageUrl(f.tfa),
@@ -72,6 +87,30 @@ export async function wikipedia() {
     onthisday: (f.onthisday || [])
       .slice(0, 8)
       .map((o) => ({ year: o.year, text: o.text, url: pageUrl(o.pages?.[0]) })),
+  };
+}
+
+// NASA Astronomy Picture of the Day. DEMO_KEY works but is rate limited per IP; set
+// NASA_API_KEY (free at api.nasa.gov) if it starts failing.
+export async function apod() {
+  const key = process.env.NASA_API_KEY || 'DEMO_KEY';
+  const a = await fetchJSON(`https://api.nasa.gov/planetary/apod?api_key=${key}&thumbs=true`, { timeout: 30000 });
+  const src = a.media_type === 'image' ? a.hdurl || a.url : a.thumbnail_url;
+  // Some days are interactive pages; the API then returns a placeholder logo. Keep yesterday's.
+  if (!src || /logo/i.test(src) || !['image', 'video'].includes(a.media_type)) {
+    throw new Error(`APOD has no usable image today (${a.media_type})`);
+  }
+  return {
+    items: [],
+    apod: {
+      src: a.media_type === 'image' ? a.url : a.thumbnail_url,
+      full: src,
+      title: a.title,
+      explanation: clip(a.explanation, 420),
+      credit: (a.copyright || 'NASA').replace(/\s+/g, ' ').trim(),
+      url: `https://apod.nasa.gov/apod/ap${a.date.slice(2).replace(/-/g, '')}.html`,
+      date: a.date,
+    },
   };
 }
 

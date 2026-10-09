@@ -30,6 +30,7 @@ export async function github_trending() {
     time: r.created_at,
     badge: `★ ${r.stargazers_count >= 1000 ? (r.stargazers_count / 1000).toFixed(1) + 'k' : r.stargazers_count}`,
     summary: clip(r.description || '', 160),
+    image: `https://opengraph.githubassets.com/1/${r.full_name}`,
   }));
   return { items };
 }
@@ -74,15 +75,24 @@ const TICKERS = [
   ['INR=X', 'USD/INR'],
 ];
 
+// Keep sparklines small: at most 40 evenly spaced points, rounded.
+function downsample(values, n = 40) {
+  if (values.length <= n) return values.map((v) => +v.toPrecision(6));
+  const step = (values.length - 1) / (n - 1);
+  return Array.from({ length: n }, (_, i) => +values[Math.round(i * step)].toPrecision(6));
+}
+
 export async function markets() {
   const errors = [];
   const quotes = await Promise.all(
     TICKERS.map(async ([sym, name]) => {
       try {
         const j = await fetchJSON(
-          `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?range=1d&interval=1h`,
+          `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?range=1d&interval=15m`,
         );
-        const m = j.chart.result[0].meta;
+        const r = j.chart.result[0];
+        const m = r.meta;
+        const spark = downsample((r.indicators?.quote?.[0]?.close || []).filter((v) => v != null));
         const prev = m.chartPreviousClose ?? m.previousClose;
         return {
           name,
@@ -90,6 +100,7 @@ export async function markets() {
           price: m.regularMarketPrice,
           change: prev ? ((m.regularMarketPrice - prev) / prev) * 100 : null,
           url: `https://finance.yahoo.com/quote/${encodeURIComponent(sym)}`,
+          spark,
         };
       } catch (err) {
         errors.push(`${name}: ${err.message}`);
@@ -97,13 +108,22 @@ export async function markets() {
       }
     }),
   );
+  const cgSpark = async (id) => {
+    try {
+      const j = await fetchJSON(`https://api.coingecko.com/api/v3/coins/${id}/market_chart?vs_currency=usd&days=1`);
+      return downsample(j.prices.map((p) => p[1]));
+    } catch {
+      return [];
+    }
+  };
   try {
+    const [btcSpark, ethSpark] = await Promise.all([cgSpark('bitcoin'), cgSpark('ethereum')]);
     const cg = await fetchJSON(
       'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd&include_24hr_change=true',
     );
     quotes.push(
-      { name: 'BTC', symbol: 'BTC', price: cg.bitcoin.usd, change: cg.bitcoin.usd_24h_change, url: 'https://www.coingecko.com/en/coins/bitcoin' },
-      { name: 'ETH', symbol: 'ETH', price: cg.ethereum.usd, change: cg.ethereum.usd_24h_change, url: 'https://www.coingecko.com/en/coins/ethereum' },
+      { name: 'BTC', symbol: 'BTC', price: cg.bitcoin.usd, change: cg.bitcoin.usd_24h_change, url: 'https://www.coingecko.com/en/coins/bitcoin', spark: btcSpark },
+      { name: 'ETH', symbol: 'ETH', price: cg.ethereum.usd, change: cg.ethereum.usd_24h_change, url: 'https://www.coingecko.com/en/coins/ethereum', spark: ethSpark },
     );
   } catch (err) {
     errors.push(`CoinGecko: ${err.message}`);

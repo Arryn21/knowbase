@@ -9,7 +9,7 @@ export async function chess_news() {
     ['https://www.reddit.com/r/chess/top/.rss?t=day', 'r/chess', 10],
   ]);
   items.forEach((i) => i.source === 'r/chess' && (i.summary = ''));
-  return { items: interleave(dedupeSort(items, 120, { maxAgeHours: 120 }), 40), errors };
+  return { items: interleave(dedupeSort(items, 120, { maxAgeHours: 240 }), 40), errors };
 }
 
 // Lessons, opening ideas, study tips.
@@ -32,6 +32,7 @@ export async function chess_live() {
     meta: [b.tour.info?.format, b.tour.info?.fideTC].filter(Boolean).join(' · '),
     upcoming: true,
     tier: b.tour.tier || 0,
+    image: b.tour.image || null,
   });
   const items = [
     ...(j.active || []).map((b) => toItem(b, true)),

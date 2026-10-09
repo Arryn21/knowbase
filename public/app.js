@@ -1,5 +1,6 @@
-import { esc, safeUrl, store } from './util.js';
+import { esc, safeUrl, store, sparkline } from './util.js';
 import { initToday, renderToday, addReviewCard } from './today.js';
+import { showMap, updateMap } from './map.js';
 
 // knowbase client: renders data/feeds.json, auto-scrolls panes, polls for updates.
 const DATA_URL = 'data/feeds.json';
@@ -48,19 +49,69 @@ addEventListener('pagehide', () => store.set('kb.lastVisit', Date.now()));
 setInterval(() => store.set('kb.lastVisit', Date.now()), 10 * 60 * 1000);
 
 // ---------- pane rendering ----------
-function itemHTML(it, paneId) {
+// Panes that stay text-only: CVE lists, leak-site victims and CTF dates have no useful pictures.
+const NO_PICTURES = new Set(['vulns', 'ransomware', 'ctf', 'status', 'markets']);
+const hostOf = (u) => {
+  try {
+    return new URL(u).hostname.replace(/^www\./, '');
+  } catch {
+    return '';
+  }
+};
+// Images come from publishers' CDNs; a broken one simply disappears.
+const img = (src, cls) =>
+  `<img class="${cls}" src="${safeUrl(src)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.remove()" />`;
+const favicon = (it) => {
+  const h = hostOf(it.site || it.url);
+  return h ? img(`https://www.google.com/s2/favicons?domain=${encodeURIComponent(h)}&sz=64`, 'fav') : '';
+};
+
+function itemMeta(it, { links = true, fav = false } = {}) {
   const time = it.upcoming ? (Date.parse(it.time) > Date.now() ? until(it.time) : it.end ? 'live' : ago(it.time)) : ago(it.time);
-  const isNew = !it.upcoming && Date.parse(it.time) > lastVisit;
-  const hotBadge = /^(KEV|LIVE|FREE|CVSS (9|10))/.test(it.badge || '');
-  const meta = [
+  const live = it.badge === 'LIVE';
+  const hot = /^(KEV|LIVE|FREE|CVSS (9|10))/.test(it.badge || '');
+  return [
+    fav ? favicon(it) : '',
     `<span class="src">${esc(it.source)}</span>`,
     time ? `<time datetime="${esc(it.time)}"${it.upcoming ? ' data-up="1"' : ''} title="${esc(it.time ? fmtDate(it.time) : '')}">${esc(time)}</time>` : '',
-    it.badge ? `<span class="badge${hotBadge ? ' hot' : ''}">${esc(it.badge)}</span>` : '',
+    it.badge ? `<span class="badge${hot ? ' hot' : ''}${live ? ' live' : ''}">${esc(it.badge)}</span>` : '',
     it.meta ? `<span>${esc(it.meta)}</span>` : '',
-    it.discuss ? `<a href="${safeUrl(it.discuss)}" target="_blank" rel="noopener">discuss</a>` : '',
+    links && it.discuss ? `<a href="${safeUrl(it.discuss)}" target="_blank" rel="noopener">discuss</a>` : '',
   ].join('');
+}
+
+/** One list row. ctx.lead renders the big picture card that opens a pane. */
+function itemHTML(it, paneId, ctx = {}) {
+  const isNew = !it.upcoming && Date.parse(it.time) > lastVisit;
+  const pictures = !NO_PICTURES.has(paneId);
+  if (ctx.lead) {
+    return `<li class="item lead${isNew ? ' new' : ''}"><a class="lead-link" href="${safeUrl(it.url)}" target="_blank" rel="noopener">${img(it.image, 'lead-img')}<span class="lead-txt"><span class="t">${esc(it.title)}</span><span class="m">${itemMeta(it, { links: false, fav: true })}</span></span></a></li>`;
+  }
+  let visual = '';
+  let side = 'right';
+  if (paneId === 'quakes' && it.mag != null) {
+    visual = `<span class="mag" style="--m:${Math.max(0, it.mag).toFixed(1)}" aria-hidden="true"></span>`;
+    side = 'left';
+  } else if (paneId === 'people' && ctx.faces?.[it.badge]) {
+    visual = img(ctx.faces[it.badge].src, 'face');
+    side = 'left';
+  } else if (pictures && it.image) {
+    visual = img(it.image, 'th');
+  }
   const summary = SUMMARY_PANES.has(paneId) && it.summary ? `<p class="s">${esc(it.summary)}</p>` : '';
-  return `<li class="item${isNew ? ' new' : ''}"><a class="t" href="${safeUrl(it.url)}" target="_blank" rel="noopener">${esc(it.title)}</a><div class="m">${meta}</div>${summary}</li>`;
+  const body = `<div class="it-body"><a class="t" href="${safeUrl(it.url)}" target="_blank" rel="noopener">${esc(it.title)}</a><div class="m">${itemMeta(it, { fav: pictures && !visual })}</div>${summary}</div>`;
+  const cls = `item${isNew ? ' new' : ''}${visual ? ` has-vis vis-${side}` : ''}`;
+  return `<li class="${cls}">${side === 'left' ? visual + body : body + visual}</li>`;
+}
+
+/** Pane HTML: the first well-pictured story becomes the lead card, the rest are rows. */
+function paneItemsHTML(pane) {
+  const items = pane.items.slice();
+  const canLead = !NO_PICTURES.has(pane.id) && !['people', 'quakes'].includes(pane.id);
+  const leadIdx = canLead ? items.slice(0, 4).findIndex((i) => i.image) : -1;
+  const lead = leadIdx >= 0 ? items.splice(leadIdx, 1)[0] : null;
+  const ctx = { faces: pane.faces };
+  return (lead ? itemHTML(lead, pane.id, { lead: true }) : '') + items.map((it) => itemHTML(it, pane.id, ctx)).join('');
 }
 
 function paneShell(id, title) {
@@ -119,7 +170,7 @@ function renderPane(pane) {
     track.innerHTML = `<li class="empty">Nothing here yet. The next refresh runs within 15 minutes.</li>`;
     return;
   }
-  scrollers.get(pane.id).reset(pane.items.map((it) => itemHTML(it, pane.id)).join(''));
+  scrollers.get(pane.id).reset(paneItemsHTML(pane));
 }
 
 // ---------- auto-scroll ----------
@@ -221,14 +272,19 @@ addEventListener('keydown', (e) => {
 // ---------- strip: markets, status, freshness ----------
 function renderStrip(data) {
   const m = data.panes.markets?.items || [];
-  document.getElementById('tickers').innerHTML = m
+  const tickerHTML = m
     .map((q) => {
       const dir = q.change > 0.005 ? 'up' : q.change < -0.005 ? 'down' : '';
       const val = q.price >= 1000 ? q.price.toLocaleString(undefined, { maximumFractionDigits: 0 }) : q.price.toLocaleString(undefined, { maximumFractionDigits: 2 });
       const chg = q.change == null ? '' : `${q.change > 0 ? '+' : ''}${q.change.toFixed(2)}%`;
-      return `<a class="ticker" href="${safeUrl(q.url)}" target="_blank" rel="noopener"><span class="n">${esc(q.name)}</span><span class="v">${esc(val)}</span><span class="c ${dir}">${esc(chg)}</span></a>`;
+      return `<a class="ticker" href="${safeUrl(q.url)}" target="_blank" rel="noopener"><span class="n">${esc(q.name)}</span>${sparkline(q.spark, { cls: dir })}<span class="v">${esc(val)}</span><span class="c ${dir}">${esc(chg)}</span></a>`;
     })
     .join('');
+  // The ticker scrolls as a loop: the second copy is decorative and hidden from assistive tech.
+  const tickers = document.getElementById('tickers');
+  tickers.innerHTML = `<div class="ticker-track">${tickerHTML}<span class="ticker-copy" aria-hidden="true">${tickerHTML.replace(/<a /g, '<a tabindex="-1" ')}</span></div>`;
+  const track = tickers.firstElementChild;
+  track.style.setProperty('--ticker-dur', `${Math.max(20, track.scrollWidth / 2 / 45)}s`);
   const s = data.panes.status?.items || [];
   document.getElementById('statuses').innerHTML = s
     .map((x) => `<a class="status" data-s="${esc(x.indicator)}" href="${safeUrl(x.url)}" target="_blank" rel="noopener" title="${esc(x.description)}">${esc(x.name)}</a>`)
@@ -313,6 +369,7 @@ function renderEventsShell() {
       ${seg('price', [['free', 'Free'], ['all', '≤$20']])}
       <select aria-label="Category" data-k="cat"></select>
     </div>
+    <div class="ev-map" id="evMap" role="region" aria-label="Map of LA events and earthquakes near Carson"></div>
     <div class="viewport" tabindex="0" aria-label="LA events"><div class="ev-list"><div class="empty">Loading events…</div></div></div>
     <span class="scroll-hint" aria-hidden="true">Click to scroll</span>`;
   makeEngageable(el.querySelector('.viewport'));
@@ -354,6 +411,7 @@ function renderEvents(pane) {
     .filter((e) => e.miles == null ? evState.dist === 'any' : e.miles <= maxMi)
     .filter((e) => evState.price === 'all' || e.free === true)
     .filter((e) => evState.cat === 'all' || e.category === evState.cat);
+  updateMap(list, (current?.panes.quakes?.items || []).filter((q) => q.source === 'SoCal' && q.lat != null));
 
   const byDay = new Map();
   for (const e of list) {
@@ -386,7 +444,8 @@ function eventHTML(e) {
     : new Date(e.start).toLocaleTimeString('en-US', { timeZone: 'America/Los_Angeles', hour: 'numeric', minute: '2-digit' });
   const price = e.free ? '<span class="badge free">FREE</span>' : `<span class="badge">${esc(e.priceText || '$?')}</span>`;
   const where = [e.venue, e.area].filter(Boolean).join(', ');
-  return `<div class="ev">
+  return `<div class="ev${e.image ? ' has-img' : ''}">
+    ${e.image ? img(e.image, 'ev-img') : ''}
     <a class="t" href="${safeUrl(e.url)}" target="_blank" rel="noopener">${esc(e.title)}</a>
     <div class="m">${when ? `<span>${esc(when)}</span>` : ''}${where ? `<span>${esc(where)}</span>` : ''}<span>${esc(e.source)}${e.approval ? ' · approval' : ''}</span><span>${esc(e.category)}</span></div>
     ${e.summary ? `<p class="s">${esc(e.summary)}</p>` : ''}
@@ -426,6 +485,17 @@ let conceptIdx = 0;
 function renderKnowledge(data) {
   const p = data.panes;
   const cards = [];
+  const apod = p.apod?.apod;
+  if (apod) {
+    cards.push(`<article class="card hero-card" style="--hero:url('${esc(safeUrl(apod.src))}')">
+      <div class="hero-txt">
+        <h3>Astronomy picture of the day</h3>
+        <p class="hero-title"><a href="${safeUrl(apod.url)}" target="_blank" rel="noopener">${esc(apod.title)}</a></p>
+        <p class="hero-sub">${esc(apod.explanation)}</p>
+      </div>
+      <a class="hero-credit" href="${safeUrl(apod.url)}" target="_blank" rel="noopener">Image: ${esc(apod.credit)} · NASA APOD</a>
+    </article>`);
+  }
   const concepts = p.concept?.cards || [];
   if (concepts.length) {
     const c = concepts[conceptIdx % concepts.length];
@@ -563,6 +633,13 @@ function showPage(id, { scroll = true } = {}) {
   if (scroll) window.scrollTo({ top: 0, behavior: 'instant' });
   const sec = document.getElementById(id);
   scrollers.forEach((s) => sec.contains(s.el) && s.refit());
+  if (!reduceMotion.matches) {
+    sec.classList.remove('entering');
+    void sec.offsetWidth; // restart the animation
+    sec.classList.add('entering');
+    setTimeout(() => sec.classList.remove('entering'), 900);
+  }
+  if (id === 'local') showMap();
   if (location.hash !== `#${id}`) history.replaceState(null, '', `#${id}`);
 }
 

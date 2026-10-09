@@ -51,6 +51,28 @@ function atomLink(entry) {
   return alt?.['@href'] || text(alt);
 }
 
+// Some publishers put a small thumbnail in the feed; ask their image CDN for a larger one.
+function upgradeImage(u) {
+  if (!u) return null;
+  u = stripHtml(u);
+  if (!/^https?:\/\//.test(u)) return null;
+  return u.replace(/(ichef\.bbci\.co\.uk\/ace\/standard\/)\d+\//, '$1800/');
+}
+
+/** The item's picture: RSS media fields first (largest wins), then the first <img> in its HTML. */
+function findImage(it) {
+  const media = [
+    ...asArray(it['media:content']),
+    ...asArray(it['media:group']?.['media:content']),
+    ...asArray(it['media:thumbnail']),
+  ].filter((m) => m?.['@url'] && !/^(video|audio)/.test(m['@type'] || m['@medium'] || ''));
+  media.sort((a, b) => (Number(b['@width']) || 0) - (Number(a['@width']) || 0));
+  const enclosure = asArray(it.enclosure).find((e) => /^image\//.test(e?.['@type'] || ''));
+  const html = [it['content:encoded'], it.description, it.content, it.summary].map(text).join(' ');
+  const inline = html.match(/<img[^>]+src=["']([^"']+)["']/i) || html.match(/&lt;img[^&]+src=&quot;([^&]+)&quot;/i);
+  return upgradeImage(media[0]?.['@url'] || enclosure?.['@url'] || inline?.[1] || it['itunes:image']?.['@href']);
+}
+
 /** Parse RSS 2.0, RDF/RSS 1.0 or Atom into a flat item list. */
 export function parseFeed(xml, source) {
   const doc = parser.parse(xml);
@@ -69,6 +91,7 @@ export function parseFeed(xml, source) {
     let src = source;
     // Google News appends " - Publisher" to every title.
     const gSource = text(it.source);
+    const site = it.source?.['@url'] || null; // Google News gives the publisher's homepage
     if (gSource) {
       src = gSource;
       if (title.endsWith(` - ${gSource}`)) title = title.slice(0, -(gSource.length + 3));
@@ -80,6 +103,8 @@ export function parseFeed(xml, source) {
       source: src,
       time: Number.isFinite(t) ? new Date(t).toISOString() : null,
       summary: clip(summary),
+      image: findImage(it),
+      site,
       _raw: it,
     };
   });

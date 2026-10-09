@@ -38,7 +38,35 @@ const PEOPLE = [
   ['"Bruce Lee"', 'Bruce Lee'],
   ['"Tom Ellis" actor OR "Lucifer Morningstar"', 'Lucifer'],
   ['"Simon Baker" actor OR "The Mentalist" CBS OR "Patrick Jane"', 'The Mentalist'],
+  ['"Robert Downey Jr." OR "Iron Man" Marvel', 'Iron Man'],
+  ['"Ben Affleck"', 'Ben Affleck'],
 ];
+
+// Wikipedia page used for each person's photo. The TV characters use their actors.
+const FACES = {
+  'Henry Cavill': 'Henry_Cavill',
+  'Elon Musk': 'Elon_Musk',
+  'Bruce Lee': 'Bruce_Lee',
+  Lucifer: 'Tom_Ellis_(actor)',
+  'The Mentalist': 'Simon_Baker',
+  'Iron Man': 'Robert_Downey_Jr.',
+  'Ben Affleck': 'Ben_Affleck',
+};
+
+async function faces() {
+  const out = {};
+  await Promise.all(
+    Object.entries(FACES).map(async ([who, page]) => {
+      try {
+        const s = await fetchJSON(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(page)}`);
+        if (s.thumbnail?.source) out[who] = { src: s.thumbnail.source, url: s.content_urls?.desktop?.page };
+      } catch {
+        /* no photo for this one */
+      }
+    }),
+  );
+  return out;
+}
 
 export async function people() {
   const errors = [];
@@ -57,7 +85,7 @@ export async function people() {
   const queues = lists.map((l) => dedupeSort(l, 10));
   const items = [];
   while (queues.some((q) => q.length)) for (const q of queues) if (q.length) items.push(q.shift());
-  return { items: dedupeSort(items, 45), errors };
+  return { items: dedupeSort(items, 50), faces: await faces(), errors };
 }
 
 export async function books() {

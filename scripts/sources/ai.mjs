@@ -103,6 +103,7 @@ export async function releases() {
             source: repo,
             time: r.published_at,
             badge: r.prerelease ? 'pre' : '',
+            image: `https://opengraph.githubassets.com/1/${repo}`,
             summary: clip(r.name && r.name !== r.tag_name ? r.name : r.body || '', 140),
           }));
       } catch (err) {
@@ -124,6 +125,7 @@ export async function research() {
     badge: p.paper?.upvotes ? `▲ ${p.paper.upvotes}` : '',
     summary: clip(p.paper?.ai_summary || p.summary || p.paper?.summary, 200),
     score: p.paper?.upvotes || 0,
+    image: p.thumbnail || null,
   }));
   hf.sort((a, b) => b.score - a.score);
   const { items: arxiv, errors } = await gatherFeeds([

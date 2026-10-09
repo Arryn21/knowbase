@@ -76,6 +76,7 @@ async function luma() {
         priceMax: free ? 0 : cents != null ? cents / 100 : null,
         priceText: free ? 'Free' : cents != null ? `$${(cents / 100).toFixed(cents % 100 ? 2 : 0)}` : '',
         approval: !!e.ticket_info?.require_approval,
+        image: ev.cover_url || null,
         category: categorize(ev.name),
       };
     });
@@ -120,6 +121,7 @@ async function eventbrite() {
           priceText: 'Free',
           category: categorize(it.name),
           summary: clip(it.description || '', 160),
+          image: it.image || null,
         });
       }
     }

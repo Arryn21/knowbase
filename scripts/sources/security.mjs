@@ -76,6 +76,7 @@ export async function ransomware() {
       i.title = m[2];
     }
     i.summary = clip(i.summary, 160);
+    i.image = null; // the feed's images are leak-site screenshots; keep this pane text-only
   });
   return { items: dedupeSort(items, 40), errors };
 }
