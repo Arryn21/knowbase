@@ -1,3 +1,4 @@
 node_modules/
 public/data/
 .env
+worker/.wrangler/

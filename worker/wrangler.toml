@@ -1,0 +1,12 @@
+name = "knowbase-refresh"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+
+# No public URL needed; the Worker only runs on its schedule.
+workers_dev = false
+
+[triggers]
+crons = ["*/15 * * * *"]
+
+[observability]
+enabled = true

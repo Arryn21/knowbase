@@ -24,6 +24,13 @@ CSS and JS with no build step. It auto-scrolls each pane and polls for fresh dat
 Each pane has its own refresh interval (`PANES` in `scripts/build-data.mjs`). If a source
 fails, the pane keeps its last good data and shows its update time in red.
 
+## Refresh timer
+
+GitHub's scheduler skips most runs on this repo, so a Cloudflare Worker (`worker/`) starts
+the workflow every 15 minutes through the GitHub API. GitHub's own cron stays on as an
+hourly backup. The Worker needs one secret, `GH_TOKEN`: a fine-grained token for this repo
+with Actions read and write. Deploy it with `npx wrangler@4 deploy` from `worker/`.
+
 ## Run locally
 
 ```bash

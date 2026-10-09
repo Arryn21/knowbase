@@ -2,8 +2,9 @@ name: Refresh and deploy
 
 on:
   schedule:
-    # Off the top of the hour: GitHub delays or drops scheduled runs most at :00.
-    - cron: '7,22,37,52 * * * *'
+    # The Cloudflare Worker in worker/ starts this every 15 minutes. GitHub's own
+    # cron skips most runs here, so it's only an hourly backup.
+    - cron: '37 * * * *'
   push:
     branches: [main]
   workflow_dispatch:
