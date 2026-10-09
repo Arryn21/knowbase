@@ -489,11 +489,11 @@ function renderKnowledge(data) {
   if (apod) {
     cards.push(`<article class="card hero-card" style="--hero:url('${esc(safeUrl(apod.src))}')">
       <div class="hero-txt">
-        <h3>Astronomy picture of the day</h3>
+        <h3>${esc(apod.label || 'Astronomy picture of the day')}</h3>
         <p class="hero-title"><a href="${safeUrl(apod.url)}" target="_blank" rel="noopener">${esc(apod.title)}</a></p>
         <p class="hero-sub">${esc(apod.explanation)}</p>
       </div>
-      <a class="hero-credit" href="${safeUrl(apod.url)}" target="_blank" rel="noopener">Image: ${esc(apod.credit)} · NASA APOD</a>
+      <a class="hero-credit" href="${safeUrl(apod.url)}" target="_blank" rel="noopener">Image: ${esc(apod.credit)} · ${esc(apod.label || 'NASA APOD')}</a>
     </article>`);
   }
   const concepts = p.concept?.cards || [];

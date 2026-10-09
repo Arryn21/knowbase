@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { clip, stripHtml } from '../lib/feeds.mjs';
+import { clip, stripHtml, fetchFeed } from '../lib/feeds.mjs';
 import { fetchJSON } from '../lib/http.mjs';
 import { HOME, milesFrom } from '../lib/geo.mjs';
 
@@ -112,7 +112,9 @@ export async function apod() {
       misses.push(`${date}: ${err.message}`);
     }
   }
-  if (!src) throw new Error(`No APOD image in the last 3 days (${misses.join('; ')})`);
+  // APOD moved to science.nasa.gov and its API now often points at a placeholder. NASA's
+  // Image of the Day feed is the fallback (mostly public domain, no key needed).
+  if (!src) return nasaImageOfTheDay(misses);
   return {
     items: [],
     apod: {
@@ -123,7 +125,29 @@ export async function apod() {
       credit: (a.copyright || 'NASA').replace(/\s+/g, ' ').trim(),
       url: `https://apod.nasa.gov/apod/ap${a.date.slice(2).replace(/-/g, '')}.html`,
       date: a.date,
+      label: 'Astronomy picture of the day',
     },
+  };
+}
+
+async function nasaImageOfTheDay(apodMisses) {
+  const [it] = await fetchFeed('https://www.nasa.gov/feeds/iotd-feed/', 'NASA');
+  if (!it?.image) throw new Error(`No NASA image available (APOD: ${apodMisses.join('; ')})`);
+  // Originals run to several MB; WordPress serves a resized copy with ?w=.
+  const resized = `${it.image.split('?')[0]}?w=1600`;
+  return {
+    items: [],
+    apod: {
+      src: resized,
+      full: it.image,
+      title: it.title,
+      explanation: clip(it.summary, 420),
+      credit: 'NASA',
+      url: it.url,
+      date: it.time?.slice(0, 10),
+      label: 'NASA image of the day',
+    },
+    errors: [`APOD unavailable, used NASA Image of the Day (${apodMisses.join('; ')})`],
   };
 }
 

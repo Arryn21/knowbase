@@ -27,7 +27,7 @@ fails, the pane keeps its last good data and shows its update time in red.
 ## Pictures and graphics
 
 - Story images come from the feeds themselves (`media:content`, enclosures, inline `<img>`). For the top 14 stories in most panes without one, the build reads the article's `og:image` (cached in `data/cache.json`, at most 90 new fetches per run). Google News links can't be resolved, so those rows show the publisher's logo instead. The ransomware pane is deliberately text-only: its feed images are leak-site screenshots.
-- Today's hero is Wikipedia's picture of the day (credited and linked to its Commons page). Knowledge opens on NASA's Astronomy Picture of the Day when the API has a usable image; add a free `NASA_API_KEY` secret if `DEMO_KEY` gets rate limited.
+- Today's hero is Wikipedia's picture of the day (credited and linked to its Commons page). Knowledge opens on NASA's Astronomy Picture of the Day when its API has a usable image (APOD moved to science.nasa.gov and the API often returns a placeholder), otherwise on NASA's Image of the Day feed. `NASA_API_KEY` avoids the shared demo key's rate limit.
 - Faces of the people you follow come from Wikipedia (`FACES` in `scripts/sources/growth.mjs`; the TV characters use their actors).
 - The LA page map uses Leaflet and OpenStreetMap tiles, loaded only when that page opens.
 - All animation respects the system's reduce-motion setting.
