@@ -94,12 +94,25 @@ export async function wikipedia() {
 // NASA_API_KEY (free at api.nasa.gov) if it starts failing.
 export async function apod() {
   const key = process.env.NASA_API_KEY || 'DEMO_KEY';
-  const a = await fetchJSON(`https://api.nasa.gov/planetary/apod?api_key=${key}&thumbs=true`, { timeout: 30000 });
-  const src = a.media_type === 'image' ? a.hdurl || a.url : a.thumbnail_url;
-  // Some days are interactive pages; the API then returns a placeholder logo. Keep yesterday's.
-  if (!src || /logo/i.test(src) || !['image', 'video'].includes(a.media_type)) {
-    throw new Error(`APOD has no usable image today (${a.media_type})`);
+  // Asking for "today" without a date sometimes returns HTTP 500, so ask for explicit dates
+  // (APOD runs on US Eastern time) and step back a day or two if needed.
+  const eastern = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date());
+  let a = null;
+  let src = null;
+  const misses = [];
+  for (let back = 0; back < 3 && !src; back++) {
+    const date = new Date(Date.parse(eastern + 'T12:00:00Z') - back * 864e5).toISOString().slice(0, 10);
+    try {
+      a = await fetchJSON(`https://api.nasa.gov/planetary/apod?api_key=${key}&thumbs=true&date=${date}`, { timeout: 30000 });
+      const candidate = a.media_type === 'image' ? a.hdurl || a.url : a.thumbnail_url;
+      // Some days are interactive pages; the API then returns a placeholder logo.
+      if (candidate && !/logo/i.test(candidate) && ['image', 'video'].includes(a.media_type)) src = candidate;
+      else misses.push(`${date}: no usable image (${a.media_type})`);
+    } catch (err) {
+      misses.push(`${date}: ${err.message}`);
+    }
   }
+  if (!src) throw new Error(`No APOD image in the last 3 days (${misses.join('; ')})`);
   return {
     items: [],
     apod: {

@@ -2,6 +2,9 @@
 const UA =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130 Safari/537.36 knowbase/1.0';
 
+// Error messages end up in the published feeds.json, so never let a key in a URL into one.
+const redact = (url) => String(url).replace(/([?&](?:api_key|apikey|key|token|access_token|client_secret)=)[^&]+/gi, '$1***');
+
 export async function fetchText(url, { headers = {}, timeout = 20000, retries = 1 } = {}) {
   let lastErr;
   for (let attempt = 0; attempt <= retries; attempt++) {
@@ -11,7 +14,7 @@ export async function fetchText(url, { headers = {}, timeout = 20000, retries = 
         signal: AbortSignal.timeout(timeout),
       });
       if (res.ok) return await res.text();
-      lastErr = new Error(`HTTP ${res.status} for ${url}`);
+      lastErr = new Error(`HTTP ${res.status} for ${redact(url)}`);
       if (res.status !== 429 && res.status < 500) break;
     } catch (err) {
       lastErr = err;
