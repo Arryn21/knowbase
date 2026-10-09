@@ -61,5 +61,6 @@ and each run processes at most 6 new articles.
 - Today also has an evening journal, a currently-reading tracker (logging 10+ pages ticks the reading habit), spaced-repetition review cards (add your own or use "Add to review" on the concept and ATT&CK cards) and a weekly review with stats.
 - Progress is saved in the browser. **Sync** (button next to the Today heading) copies it to a private GitHub Gist, encrypted in the browser with AES-GCM using a key derived from your passphrase. Each device needs a fine-grained GitHub token with only the Gists permission (read and write) and the same passphrase. Changes merge entry by entry using timestamps, so two devices editing different days don't overwrite each other. Code: `public/sync.js` and `public/today.js`.
 - **Focus** hides every news feed and keeps Today, Chess and Knowledge. The top bar counts minutes on the board today and shows a reminder after 30 minutes.
-- Keyboard: `P` pauses or resumes all auto-scrolling. Hovering a pane also pauses it.
+- Each section is its own page (`#today`, `#news`, `#ai`, `#security`, `#pulse`, `#chess`, `#local`, `#knowledge`), so links can be bookmarked. On wide screens the panes size themselves to fill the window, so feed pages don't scroll.
+- Keyboard: `1`-`8` switch pages, `P` pauses or resumes all auto-scrolling. Hovering a pane also pauses it.
 - The mouse wheel always scrolls the page. Click inside a pane (or Tab to it) to scroll that pane; moving the pointer out or pressing Esc gives the wheel back to the page.

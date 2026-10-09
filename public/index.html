@@ -21,11 +21,11 @@
 <body>
   <div class="masthead">
   <header class="topbar">
-    <a class="brand" href="#top" aria-label="knowbase home">
+    <a class="brand" href="#today" aria-label="knowbase home">
       <span class="brand-mark">kb</span><span class="brand-name">knowbase</span>
     </a>
-    <nav class="jump" aria-label="Sections">
-      <a href="#today">Today</a>
+    <nav class="jump" aria-label="Pages">
+      <a href="#today" aria-current="page">Today</a>
       <a href="#news" data-feed>News</a>
       <a href="#ai" data-feed>AI</a>
       <a href="#security" data-feed>Security</a>
@@ -58,33 +58,33 @@
   </div>
 
   <main id="top">
-    <section class="group" data-hue="growth" id="today" aria-labelledby="h-today">
+    <section class="group page" data-hue="growth" id="today" aria-labelledby="h-today">
       <h2 id="h-today">Today <button class="pill-btn sync-btn" id="syncBtn" type="button"></button></h2>
       <div class="today" id="todayGrid"></div>
       <div class="grid" data-cols style="--cols: 3" data-panes="growth_mind growth_body people"></div>
     </section>
 
-    <section class="group feed-group" data-hue="news" id="news" aria-labelledby="h-news">
+    <section class="group page feed-group" data-hue="news" id="news" aria-labelledby="h-news">
       <h2 id="h-news">News</h2>
       <div class="grid" data-cols style="--cols: 3" data-panes="india world usa"></div>
     </section>
 
-    <section class="group feed-group" data-hue="ai" id="ai" aria-labelledby="h-ai">
+    <section class="group page feed-group" data-hue="ai" id="ai" aria-labelledby="h-ai">
       <h2 id="h-ai">AI</h2>
-      <div class="grid" data-cols style="--cols: 3" data-panes="ai_news research techniques new_models hf_trending releases"></div>
+      <div class="grid" data-cols style="--cols: 3; --rows: 2" data-panes="ai_news research techniques new_models hf_trending releases"></div>
     </section>
 
-    <section class="group feed-group" data-hue="security" id="security" aria-labelledby="h-security">
+    <section class="group page feed-group" data-hue="security" id="security" aria-labelledby="h-security">
       <h2 id="h-security">Security</h2>
       <div class="grid" data-cols style="--cols: 4" data-panes="cyber_news vulns ransomware ctf"></div>
     </section>
 
-    <section class="group feed-group" data-hue="pulse" id="pulse" aria-labelledby="h-pulse">
+    <section class="group page feed-group" data-hue="pulse" id="pulse" aria-labelledby="h-pulse">
       <h2 id="h-pulse">Pulse</h2>
       <div class="grid" data-cols style="--cols: 3" data-panes="hn github_trending community"></div>
     </section>
 
-    <section class="group" data-hue="chess" id="chess" aria-labelledby="h-chess">
+    <section class="group page" data-hue="chess" id="chess" aria-labelledby="h-chess">
       <h2 id="h-chess">Chess</h2>
       <div class="grid" data-cols style="--cols: 4">
         <div class="grid-contents" data-panes="chess_news chess_live chess_learn"></div>
@@ -92,7 +92,7 @@
       </div>
     </section>
 
-    <section class="group feed-group" data-hue="local" id="local" aria-labelledby="h-local">
+    <section class="group page feed-group" data-hue="local" id="local" aria-labelledby="h-local">
       <h2 id="h-local">Around LA</h2>
       <div class="grid grid-local">
         <article class="pane pane-events" id="pane-la_events"></article>
@@ -100,7 +100,7 @@
       </div>
     </section>
 
-    <section class="group" data-hue="knowledge" id="knowledge" aria-labelledby="h-knowledge">
+    <section class="group page" data-hue="knowledge" id="knowledge" aria-labelledby="h-knowledge">
       <h2 id="h-knowledge">Knowledge</h2>
       <div class="knowledge" id="knowledgeGrid"></div>
     </section>

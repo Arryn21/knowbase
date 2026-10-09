@@ -159,6 +159,7 @@ class AutoScroller {
   }
   // Duplicate the list once so the loop wraps seamlessly; the copy is hidden from AT and tab order.
   reset(html) {
+    this.html = html;
     const keep = this.viewport.scrollTop;
     this.track.innerHTML = html;
     this.half = 0;
@@ -168,6 +169,11 @@ class AutoScroller {
       [...this.track.children].slice(this.track.children.length / 2).forEach((li) => li.setAttribute('aria-hidden', 'true'));
     }
     this.viewport.scrollTop = this.pos = Math.min(keep, this.half || keep);
+  }
+  // Panes rendered on a hidden page measure zero height; re-measure once they're visible.
+  refit() {
+    this.visible = true; // its page was just shown; the IntersectionObserver catches up later
+    if (this.html) this.reset(this.html);
   }
   tick(dt, now) {
     const active =
@@ -206,7 +212,10 @@ function togglePauseAll() {
 }
 pauseAllBtn.addEventListener('click', togglePauseAll);
 addEventListener('keydown', (e) => {
-  if (e.key.toLowerCase() === 'p' && !e.target.closest('input, select, textarea')) togglePauseAll();
+  if (e.target.closest('input, select, textarea') || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.key.toLowerCase() === 'p') togglePauseAll();
+  const n = Number(e.key);
+  if (n >= 1 && n <= PAGES.length) location.hash = PAGES[n - 1];
 });
 
 // ---------- strip: markets, status, freshness ----------
@@ -530,6 +539,45 @@ function renderPuzzle(pane) {
     </div>`;
 }
 
+// ---------- pages ----------
+// Each section is its own page, switched by the URL hash (#today, #news, ...).
+const PAGES = [...document.querySelectorAll('section.page')].map((s) => s.id);
+let currentPage = null;
+
+function showPage(id, { scroll = true } = {}) {
+  if (!PAGES.includes(id)) id = 'today';
+  const focusOn = document.body.classList.contains('focus');
+  if (focusOn && document.getElementById(id).classList.contains('feed-group')) id = 'today';
+  currentPage = id;
+  for (const sec of document.querySelectorAll('section.page')) sec.hidden = sec.id !== id;
+  document.querySelectorAll('.jump a').forEach((a) => {
+    if (a.hash === `#${id}`) {
+      a.setAttribute('aria-current', 'page');
+      a.scrollIntoView({ block: 'nearest', inline: 'center' }); // keeps the tab in view in the phone tab row
+    }
+    else a.removeAttribute('aria-current');
+  });
+  const label = document.querySelector(`.jump a[href="#${id}"]`)?.textContent.trim() || 'Today';
+  document.title = `${label} · knowbase`;
+  store.set('kb.page', id);
+  if (scroll) window.scrollTo({ top: 0, behavior: 'instant' });
+  const sec = document.getElementById(id);
+  scrollers.forEach((s) => sec.contains(s.el) && s.refit());
+  if (location.hash !== `#${id}`) history.replaceState(null, '', `#${id}`);
+}
+
+addEventListener('hashchange', () => showPage(location.hash.slice(1)));
+// Turning Focus on while reading a feed page sends you back to Today.
+document.getElementById('focusToggle').addEventListener('click', () => showPage(currentPage, { scroll: false }));
+let resizeTimer = null;
+addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    const sec = document.getElementById(currentPage);
+    scrollers.forEach((s) => sec?.contains(s.el) && s.refit());
+  }, 250);
+});
+
 // ---------- boot ----------
 function mountPanes(panes) {
   document.querySelectorAll('[data-panes]').forEach((grid) => {
@@ -601,6 +649,7 @@ syncPauseAll();
 syncThemeBtn();
 initToday(() => current);
 mountPanes();
+showPage(location.hash.slice(1) || store.get('kb.page', 'today'), { scroll: false });
 renderEventsShell();
 renderClocks();
 renderWeather();
