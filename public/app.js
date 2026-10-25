@@ -1,5 +1,5 @@
 import { esc, safeUrl, store, sparkline } from './util.js';
-import { initToday, renderToday, addReviewCard } from './today.js';
+import { initToday, renderToday, addReviewCard, isEventHidden, setEventHidden, onStateChange } from './today.js';
 import { showMap, updateMap } from './map.js';
 
 // knowbase client: renders data/feeds.json, auto-scrolls panes, polls for updates.
@@ -338,6 +338,7 @@ async function renderWeather() {
 // ---------- LA events ----------
 const evState = Object.assign({ when: 'week', dist: 'any', price: 'all', cat: 'all' }, store.get('kb.events', {}));
 let evData = null;
+evState.showHidden = false;
 
 const ptToday = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Los_Angeles' }).format(new Date());
 const addDays = (ymd, n) => new Intl.DateTimeFormat('en-CA', { timeZone: 'UTC' }).format(new Date(Date.parse(ymd + 'T12:00:00Z') + n * 864e5));
@@ -383,6 +384,22 @@ function renderEventsShell() {
     }
     const ics = e.target.closest('.ics');
     if (ics) downloadICS(evData.items[Number(ics.dataset.i)]);
+    const del = e.target.closest('.ev-del');
+    if (del) {
+      const row = del.closest('.ev');
+      const hide = !isEventHidden(del.dataset.key);
+      // Let the row fade out before the list re-renders without it.
+      if (hide && !reduceMotion.matches && !evState.showHidden) {
+        row.classList.add('removing');
+        setTimeout(() => setEventHidden(del.dataset.key, true), 220);
+      } else {
+        setEventHidden(del.dataset.key, hide);
+      }
+    }
+    if (e.target.closest('[data-act="toggle-hidden"]')) {
+      evState.showHidden = !evState.showHidden;
+      renderEvents();
+    }
   });
   el.querySelector('select').addEventListener('change', (e) => {
     evState.cat = e.target.value;
@@ -405,13 +422,16 @@ function renderEvents(pane) {
 
   const [from, to] = windowFor(evState.when);
   const maxMi = evState.dist === 'any' ? Infinity : Number(evState.dist);
-  const list = evData.items
+  const all = evData.items
     .map((e, i) => ({ ...e, i }))
     .filter((e) => e.endDay >= from && e.startDay <= to)
     .filter((e) => e.miles == null ? evState.dist === 'any' : e.miles <= maxMi)
     .filter((e) => evState.price === 'all' || e.free === true)
-    .filter((e) => evState.cat === 'all' || e.category === evState.cat);
-  updateMap(list, (current?.panes.quakes?.items || []).filter((q) => q.source === 'SoCal' && q.lat != null));
+    .filter((e) => evState.cat === 'all' || e.category === evState.cat)
+    .map((e) => ({ ...e, hidden: isEventHidden(evKey(e)) }));
+  const hiddenCount = all.filter((e) => e.hidden).length;
+  const list = evState.showHidden ? all : all.filter((e) => !e.hidden);
+  updateMap(list.filter((e) => !e.hidden), (current?.panes.quakes?.items || []).filter((q) => q.source === 'SoCal' && q.lat != null));
 
   const byDay = new Map();
   for (const e of list) {
@@ -433,10 +453,17 @@ function renderEvents(pane) {
     .map((p) => `<li><a href="${safeUrl(p.url)}" target="_blank" rel="noopener">${esc(p.title)}</a><span>${esc(p.area)} · ${p.miles} mi · ${esc(p.note)}</span></li>`)
     .join('');
 
+  const hiddenBar = hiddenCount
+    ? `<div class="hidden-bar"><i class="ph ph-eye-slash" aria-hidden="true"></i>${hiddenCount} hidden in this view<button type="button" class="link-btn" data-act="toggle-hidden">${evState.showHidden ? 'Hide them again' : 'Show'}</button></div>`
+    : '';
   el.querySelector('.ev-list').innerHTML =
+    hiddenBar +
     (rows || `<div class="empty">No events match these filters. Try a wider date range or distance.</div>`) +
     (places ? `<div class="places"><h4>Free most days (check hours before you go)</h4><ul>${places}</ul></div>` : '');
 }
+
+// Stable id for an event across refreshes. Editorial events can share an article URL, so add the title.
+const evKey = (e) => `${e.url}|${e.title}`.slice(0, 300);
 
 function eventHTML(e) {
   const when = e.allDay
@@ -444,12 +471,16 @@ function eventHTML(e) {
     : new Date(e.start).toLocaleTimeString('en-US', { timeZone: 'America/Los_Angeles', hour: 'numeric', minute: '2-digit' });
   const price = e.free ? '<span class="badge free">FREE</span>' : `<span class="badge">${esc(e.priceText || '$?')}</span>`;
   const where = [e.venue, e.area].filter(Boolean).join(', ');
-  return `<div class="ev${e.image ? ' has-img' : ''}">
+  return `<div class="ev${e.image ? ' has-img' : ''}${e.hidden ? ' is-hidden' : ''}">
     ${e.image ? img(e.image, 'ev-img') : ''}
     <a class="t" href="${safeUrl(e.url)}" target="_blank" rel="noopener">${esc(e.title)}</a>
     <div class="m">${when ? `<span>${esc(when)}</span>` : ''}${where ? `<span>${esc(where)}</span>` : ''}<span>${esc(e.source)}${e.approval ? ' · approval' : ''}</span><span>${esc(e.category)}</span></div>
     ${e.summary ? `<p class="s">${esc(e.summary)}</p>` : ''}
-    <div class="ev-side">${price}${e.miles != null ? `<span class="mi">${e.approxGeo ? '~' : ''}${e.miles} mi</span>` : ''}<button class="ics" type="button" data-i="${e.i}" title="Add to calendar"><i class="ph ph-calendar-plus"></i>.ics</button></div>
+    <div class="ev-side">${price}${e.miles != null ? `<span class="mi">${e.approxGeo ? '~' : ''}${e.miles} mi</span>` : ''}<div class="ev-btns"><button class="ics" type="button" data-i="${e.i}" title="Add to calendar"><i class="ph ph-calendar-plus"></i>.ics</button>${
+      e.hidden
+        ? `<button class="ev-del restore" type="button" data-key="${esc(evKey(e))}" title="Show this event again" aria-label="Restore ${esc(e.title)}"><i class="ph ph-arrow-counter-clockwise"></i></button>`
+        : `<button class="ev-del" type="button" data-key="${esc(evKey(e))}" title="Hide this event" aria-label="Hide ${esc(e.title)}"><i class="ph ph-trash"></i></button>`
+    }</div></div>
   </div>`;
 }
 
@@ -725,6 +756,7 @@ themeBtn.addEventListener('click', () => {
 syncPauseAll();
 syncThemeBtn();
 initToday(() => current);
+onStateChange(() => evData && renderEvents());
 mountPanes();
 showPage(location.hash.slice(1) || store.get('kb.page', 'today'), { scroll: false });
 renderEventsShell();

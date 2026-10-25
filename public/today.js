@@ -24,7 +24,7 @@ const agoShort = (ms) => {
 // ---------- state ----------
 // Every record carries t (last-modified ms) so two devices can merge entry by entry.
 function blankState() {
-  return { v: 2, start: localDay(), days: {}, habits: null, journal: {}, reviews: {}, reading: { current: null, finished: {} }, cards: {} };
+  return { v: 2, start: localDay(), days: {}, habits: null, journal: {}, reviews: {}, reading: { current: null, finished: {} }, cards: {}, hiddenEvents: {} };
 }
 function migrate(s) {
   const st = Object.assign(blankState(), s || {});
@@ -58,6 +58,7 @@ function mergeState(local, remote) {
     reviews: mergeMap(L.reviews, R.reviews),
     reading: { current: newer(L.reading.current, R.reading.current), finished: mergeMap(L.reading.finished, R.reading.finished) },
     cards: mergeMap(L.cards, R.cards),
+    hiddenEvents: mergeMap(L.hiddenEvents, R.hiddenEvents),
   };
 }
 
@@ -70,9 +71,16 @@ const doneCount = (ymd) => {
   return (r ? r.ch.length + r.habits.length : 0) + (G.journal[ymd]?.win ? 1 : 0);
 };
 
+// Other parts of the page (the LA events list) re-render when this state changes,
+// including when another device's changes arrive through sync.
+const listeners = new Set();
+export const onStateChange = (fn) => listeners.add(fn);
+const notify = () => listeners.forEach((fn) => fn());
+
 function save({ render = true } = {}) {
   store.set('kb.growth', G);
   if (render) renderToday();
+  notify();
   queueSync();
 }
 
@@ -91,7 +99,10 @@ async function runSync() {
     // Merge again so edits made while the request was in flight win.
     G = mergeState(G, merged);
     store.set('kb.growth', G);
-    if (JSON.stringify(G) !== before) renderToday();
+    if (JSON.stringify(G) !== before) {
+      renderToday();
+      notify();
+    }
     if (JSON.stringify(G) !== JSON.stringify(merged)) queueSync();
   } catch (err) {
     console.warn('knowbase sync:', err.message);
@@ -190,6 +201,19 @@ const dueCards = (ymd) =>
     .filter(([, c]) => c.due <= ymd)
     .sort((a, b) => (a[1].seen || 0) - (b[1].seen || 0));
 let revealed = false;
+
+// ---------- hidden LA events ----------
+// A restore is stored as { off: true } rather than deleted, so it wins the merge on
+// other devices that still have the older "hidden" entry.
+export const isEventHidden = (key) => !!G.hiddenEvents?.[key] && !G.hiddenEvents[key].off;
+
+export function setEventHidden(key, hidden) {
+  G.hiddenEvents ??= {};
+  G.hiddenEvents[key] = hidden ? { t: Date.now() } : { off: true, t: Date.now() };
+  // Events only run for two weeks; forget entries older than 45 days.
+  for (const [k, v] of Object.entries(G.hiddenEvents)) if (Date.now() - v.t > 45 * 864e5) delete G.hiddenEvents[k];
+  save({ render: false });
+}
 
 /** Add a card to the deck. Returns false when the same front already exists. */
 export function addReviewCard({ front, back, source = '' }) {

@@ -754,3 +754,20 @@ body.focus .feed-group, body.focus .strip .tickers, body.focus .jump a[data-feed
   .quote-card.hero-card blockquote { max-width: none; }
   :root { --chrome: 270px; }
 }
+
+/* Hide / restore events */
+.ev-btns { display: flex; gap: 4px; align-items: center; }
+.ev-del {
+  display: grid; place-items: center; width: 26px; height: 24px; padding: 0; cursor: pointer;
+  border: 1px solid var(--line); border-radius: 999px; background: transparent; color: var(--muted);
+}
+.ev-del:hover { color: var(--down); border-color: var(--down); }
+.ev-del.restore:hover { color: var(--up); border-color: var(--up); }
+.ev-del i { font-size: 13px; }
+.ev.is-hidden { opacity: .5; }
+.ev.removing { opacity: 0; transform: translateX(16px); transition: opacity .2s, transform .2s; }
+.hidden-bar {
+  display: flex; align-items: center; gap: 8px; padding: 7px 14px; font-size: 12.5px; color: var(--muted);
+  background: var(--surface-2); border-bottom: 1px solid var(--line);
+}
+.hidden-bar .link-btn { margin-left: auto; }
